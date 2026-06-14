@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EC LAB Preview Detail</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root {
+      --page: #ffffff;
+      --text: #111111;
+      --muted: #858585;
+      --line: #eeeeee;
+      --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--page);
+      color: var(--text);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    a,
+    button {
+      color: inherit;
+      font: inherit;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    .page {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      background: #ffffff;
+    }
+
+    .bar {
+      height: 68px;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 18px;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(18px);
+      position: relative;
+      z-index: 2;
+    }
+
+    .back,
+    .raw-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #ffffff;
+      font-size: 13px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .back svg {
+      width: 17px;
+      height: 17px;
+      margin-right: 6px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .title-wrap {
+      min-width: 0;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 15px;
+      line-height: 1.2;
+      font-weight: 720;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .frame {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #ffffff;
+      display: block;
+    }
+
+    @media (max-width: 640px) {
+      .bar {
+        height: 62px;
+        grid-template-columns: auto minmax(0, 1fr);
+        padding: 0 12px;
+      }
+
+      .raw-link {
+        display: none;
+      }
+
+      .title-wrap {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="bar">
+      <a class="back" href="index.html" aria-label="返回预览列表">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        返回
+      </a>
+      <div class="title-wrap">
+        <h1 id="title">EC LAB Preview</h1>
+        <div class="subtitle" id="subtitle">详情预览</div>
+      </div>
+      <a class="raw-link" id="rawLink" href="#" target="_blank" rel="noreferrer">打开原始页面</a>
+    </header>
+    <iframe class="frame" id="frame" title="项目详情预览" sandbox="allow-scripts allow-same-origin"></iframe>
+  </main>
+
+  <script>
+    const fallbackProjects = [
+      {
+        id: "ec-global-payments-hero",
+        title: "EC Global Payments Hero",
+        note: "Global payments landing hero",
+        src: "ec-global-payments-hero/preview.html"
+      },
+      {
+        id: "ostraka-ui-cards",
+        title: "Ostraka UI Cards",
+        note: "Three-card visual identity layout",
+        src: "ostraka-ui-cards/preview.html"
+      },
+      {
+        id: "ec-lab-charging-progress",
+        title: "EC LAB Charging Progress",
+        note: "Animated charging progress card",
+        src: "ec-lab-charging-progress/preview.html"
+      },
+      {
+        id: "ec-blue-glass-triptych",
+        title: "EC Blue Glass Triptych",
+        note: "Blue glass poster gallery",
+        src: "ec-blue-glass-triptych/preview.html"
+      },
+      {
+        id: "ec-flip-word-notes",
+        title: "EC Flip Word Notes",
+        note: "Visual word-note flashcard",
+        src: "ec-flip-word-notes/preview.html"
+      },
+      {
+        id: "pixel-icon-library",
+        title: "Pixel Icon Library",
+        note: "Vertical pixel icon archive",
+        src: "pixel-icon-library/preview.html"
+      }
+    ];
+
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+
+    function normalizeProject(project) {
+      const projectId = project.id || "";
+      return {
+        id: projectId,
+        title: project.title || projectId,
+        note: project.note || "EC inspiration asset",
+        src: project.src || `${projectId}/preview.html`
+      };
+    }
+
+    async function loadProjects() {
+      try {
+        const response = await fetch("projects.json", { cache: "no-store" });
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        const discovered = await response.json();
+        if (!Array.isArray(discovered) || discovered.length === 0) {
+          throw new Error("empty project list");
+        }
+        return discovered.map(normalizeProject);
+      } catch (error) {
+        return fallbackProjects.map(normalizeProject);
+      }
+    }
+
+    function showProject(project) {
+      document.title = `${project.title} - EC LAB`;
+      document.querySelector("#title").textContent = project.title;
+      document.querySelector("#subtitle").textContent = project.note;
+      document.querySelector("#frame").src = project.src;
+      document.querySelector("#rawLink").href = project.src;
+    }
+
+    loadProjects().then((projects) => {
+      const project = projects.find((item) => item.id === id) || projects[0];
+      showProject(project);
+    });
+  </script>
+</body>
+</html>

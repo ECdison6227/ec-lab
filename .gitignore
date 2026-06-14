@@ -1,0 +1,11 @@
+.DS_Store
+Icon?
+Icon
+deploy.sh
+.trae/
+build.py
+server.py
+skill_inventory.json
+skill_generation_summary.json
+.github/
+

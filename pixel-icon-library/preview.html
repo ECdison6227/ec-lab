@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixel Icon Library</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root {
+      --background: #fafafc;
+      --surface: #ffffff;
+      --text: #111827;
+      --muted: #9ca3af;
+      --accent: #fb7185;
+      --line: #f2f2f4;
+      --radius-sm: 6px;
+      --radius-md: 16px;
+      --radius-lg: 28px;
+      --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--background);
+      color: var(--text);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      padding: 48px 18px;
+    }
+
+    .wrap {
+      width: min(980px, 100%);
+      margin: 0 auto;
+    }
+
+    .header,
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 24px;
+      padding: 0 8px;
+    }
+
+    .header {
+      margin-bottom: 46px;
+    }
+
+    .footer {
+      align-items: flex-end;
+      margin-top: 58px;
+      padding-bottom: 20px;
+    }
+
+    .brand h1,
+    .footer h2 {
+      font-size: 24px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .brand p,
+    .footer p {
+      color: #6b7280;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+
+    .identity {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 14px;
+      background: #fb7185;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 8px 18px rgba(251, 113, 133, 0.22);
+    }
+
+    .mark::before {
+      content: "";
+      width: 13px;
+      height: 13px;
+      border: 2px solid #ffffff;
+      border-radius: var(--radius-sm);
+    }
+
+    .identity h2 {
+      font-size: 14px;
+      line-height: 1.1;
+      font-weight: 800;
+    }
+
+    .identity p {
+      color: #c0c4cc;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .card {
+      min-height: 132px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(220px, 30%);
+      gap: 26px;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      box-shadow: var(--shadow);
+      padding: 24px 28px;
+      transition: transform 220ms ease, box-shadow 220ms ease;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 34px rgba(0, 0, 0, 0.05);
+    }
+
+    .icons {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+      min-width: 0;
+      font-size: clamp(30px, 4.5vw, 42px);
+      line-height: 1;
+      filter: drop-shadow(0 2px 1px rgba(17, 24, 39, 0.06));
+    }
+
+    .icons span {
+      display: inline-block;
+      transition: transform 180ms ease;
+    }
+
+    .icons span:hover {
+      transform: scale(1.1);
+    }
+
+    .banner {
+      position: relative;
+      min-height: 150px;
+      width: 100%;
+      overflow: hidden;
+      border-radius: 22px;
+      background: linear-gradient(120deg, #172554, #3730a3 54%, #581c87);
+      display: grid;
+      place-items: center;
+      color: #ffffff;
+      box-shadow: inset 0 0 32px rgba(255, 255, 255, 0.08);
+    }
+
+    .banner::before,
+    .banner::after {
+      position: absolute;
+      opacity: 0.52;
+      font-size: 42px;
+    }
+
+    .banner::before {
+      content: "📚";
+      top: 18px;
+      left: 28px;
+    }
+
+    .banner::after {
+      content: "🧁";
+      right: 34px;
+      bottom: 18px;
+    }
+
+    .banner strong {
+      position: relative;
+      z-index: 1;
+      font-size: clamp(30px, 6vw, 54px);
+      letter-spacing: 0.12em;
+      text-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    }
+
+    .info {
+      min-height: 86px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      border-left: 1px solid #f0f0f2;
+      padding-left: 24px;
+    }
+
+    .info h3 {
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .info p {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+      margin-top: 7px;
+    }
+
+    .count {
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 760;
+      margin-top: 14px;
+    }
+
+    .number {
+      align-self: start;
+      color: #f2f2f2;
+      font-size: 34px;
+      font-weight: 850;
+      user-select: none;
+    }
+
+    .record {
+      text-align: right;
+    }
+
+    .record .line {
+      color: #4b5563;
+      font-weight: 650;
+    }
+
+    .record .site {
+      color: var(--accent);
+      font-weight: 650;
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 34px 14px;
+      }
+
+      .header,
+      .footer {
+        padding: 0 2px;
+      }
+
+      .header {
+        margin-bottom: 32px;
+      }
+
+      .card {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 22px;
+        border-radius: var(--radius-lg);
+      }
+
+      .info {
+        border-left: 0;
+        border-top: 1px solid #f0f0f2;
+        padding: 18px 2px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="header">
+      <div class="brand">
+        <h1>EC LAB <span style="color: var(--accent); font-size: 14px;">●</span></h1>
+        <p>ec 的实验室</p>
+      </div>
+      <div class="identity">
+        <div class="mark" aria-hidden="true"></div>
+        <div>
+          <h2>Pixel Icon Library</h2>
+          <p>Built for Creativity</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="grid" id="grid" aria-label="Pixel icon categories"></main>
+
+    <footer class="footer">
+      <div>
+        <h2>EC LAB</h2>
+        <p>ec 的实验室</p>
+      </div>
+      <div class="record">
+        <p class="line">Record. Explore. Share.</p>
+        <p class="site">ec.edisonc.top</p>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const categories = [
+      ["Weapons", "Pistols, rifles and blasters.", "6", "01", ["🔫", "🏹", "🪓", "💣", "🧨", "🗡️"]],
+      ["Swords", "Blades of power and elements.", "6", "02", ["🗡️", "⚔️", "🔪", "🤺", "🛠️"]],
+      ["Tools", "Essential for building and crafting.", "5", "03", ["🔍", "🪚", "🔨", "⛏️", "⚒️"]],
+      ["Consumables", "Potions, food and boosts.", "5", "04", ["🧪", "🍏", "🍯", "⏳", "🌽"]],
+      ["Miscellaneous", "Items and collectibles.", "20", "05", ["❤️", "🌼", "⭐", "🍪", "🎀", "🎁", "🪙", "💎", "📜", "✉️", "💍", "🔮"]],
+      ["Emojis", "Express every mood.", "36", "06", ["😀", "😃", "😄", "😅", "😆", "🥹", "🥶", "🤢", "🤡", "💩"]],
+      ["Armor", "Protect yourself in style.", "18", "07", ["🛡️", "🪖", "👕", "🥋", "🦺"]],
+      ["Resources", "Gather, mine and collect.", "9", "08", ["🪨", "🔥", "🧱", "🪙", "🪵", "🧀", "🪶"]],
+      ["Vector Item Tiers", "High quality icon pack.", "1", "09", []],
+      ["Buildings", "Construct and upgrade.", "12", "10", ["🏠", "🏚️", "🛖", "🏭", "🏰", "⛺", "🏦", "⛩️"]],
+      ["Terrain", "Build your world.", "13", "11", ["🟩", "🟫", "⛰️", "🏕️", "🏞️", "🏝️"]],
+      ["Nature", "Elements of the wild.", "15", "12", ["🧊", "💎", "💠", "🌲", "🍄", "🪴", "🍁"]],
+      ["UI Elements", "Interface and indicators.", "14", "13", ["🖱️", "👆", "⚔️", "⚙️", "✨", "💬", "🔔"]]
+    ];
+
+    const grid = document.querySelector("#grid");
+    grid.innerHTML = categories.map(([title, description, count, number, icons]) => `
+      <article class="card">
+        ${icons.length ? `
+          <div class="icons">${icons.map((icon) => `<span>${icon}</span>`).join("")}</div>
+        ` : `
+          <div class="banner"><strong>VECTOR</strong></div>
+        `}
+        <section class="info">
+          <div>
+            <h3>${title}</h3>
+            <p>${description}</p>
+            <div class="count">${count} icons</div>
+          </div>
+          <div class="number">${number}</div>
+        </section>
+      </article>
+    `).join("");
+  </script>
+</body>
+</html>

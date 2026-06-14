@@ -1,0 +1,349 @@
+[
+  {
+    "type": "h1",
+    "text": "About Me"
+  },
+  {
+    "type": "body",
+    "text": "I am a full-stack developer and UI designer passionate about building tools that combine <b>engineering precision</b> with <b>visual craftsmanship</b>. My work spans from interactive UI design systems and full-stack web applications to academic research in structural engineering. I believe great software lives at the intersection of <b>functional depth</b> and <b>aesthetic clarity</b>."
+  },
+  {
+    "type": "bullet",
+    "text": "Full-stack development: <b>Python</b> (FastAPI), <b>JavaScript/React</b>, <b>Electron</b>"
+  },
+  {
+    "type": "bullet",
+    "text": "UI/UX design: <b>HTML/CSS/SVG</b> animation, glassmorphism, 3D transforms, responsive layouts"
+  },
+  {
+    "type": "bullet",
+    "text": "Platform engineering: <b>Nginx</b>, <b>systemd</b>, <b>SQLite</b>, server deployment"
+  },
+  {
+    "type": "bullet",
+    "text": "Academic research: <b>Gaussian Mixture Models</b>, structural vibration analysis, <b>MATLAB</b>"
+  },
+  {
+    "type": "spacer",
+    "pt": 12
+  },
+  {
+    "type": "h1",
+    "text": "EC LAB — UI Design System"
+  },
+  {
+    "type": "body",
+    "text": "<b>EC LAB</b> (ec.edisonc.top) is my personal design laboratory where I explore the boundaries of front-end visual expression. Each project is a self-contained, single-file HTML/CSS/JS experiment — no frameworks, no CDN, no external assets. Every visual element is built from scratch using <b>inline SVG</b>, <b>CSS gradients</b>, <b>blur filters</b>, <b>3D transforms</b>, and <b>backdrop-filter</b> effects."
+  },
+  {
+    "type": "callout",
+    "text": "Design Philosophy: Every component should feel like a physical object — with weight, depth, texture, and responsive motion. No generic UI."
+  },
+  {
+    "type": "h2",
+    "text": "1. Blue Glass Triptych"
+  },
+  {
+    "type": "body",
+    "text": "A three-panel poster/gallery layout with <b>deep cobalt blue</b> and white blurred radial fields. Features <b>glassmorphism</b> pill labels, abstract silhouette-like blue blur forms, and minimal brand identity."
+  },
+  {
+    "type": "image",
+    "path": "/Users/edison/Desktop/个人主页项目/screenshots/ec-blue-glass-triptych.png",
+    "caption": "Blue Glass Triptych — Glassmorphism poster gallery with deep cobalt blue radial fields"
+  },
+  {
+    "type": "h2",
+    "text": "2. Flip Word Notes"
+  },
+  {
+    "type": "body",
+    "text": "An interactive vocabulary flashcard system with <b>physical page-flip animation</b> using CSS 3D transforms. Cards feature a top-bound flip with <b>perspective</b>, <b>rotateX</b>, and <b>transform-origin: top center</b>."
+  },
+  {
+    "type": "image",
+    "path": "/Users/edison/Desktop/个人主页项目/screenshots/ec-flip-word-notes.png",
+    "caption": "Flip Word Notes — 3D page-flip flashcard with CSS perspective transforms"
+  },
+  {
+    "type": "h2",
+    "text": "3. Global Payments Hero"
+  },
+  {
+    "type": "body",
+    "text": "A <b>FinTech landing page hero</b> with soft white rounded page shell, clean navigation, and large centered global payments headline. Features mixed sans and italic serif typography, blue-accent CTA buttons, and floating 3D-style payment icon tiles."
+  },
+  {
+    "type": "image",
+    "path": "/Users/edison/Desktop/个人主页项目/screenshots/ec-global-payments-hero.png",
+    "caption": "Global Payments Hero — FinTech landing page with grid-and-glow background"
+  },
+  {
+    "type": "h2",
+    "text": "4. Charging Progress Card"
+  },
+  {
+    "type": "body",
+    "text": "A centered dark rounded-square charging/progress card with <b>soft 3D shadows</b>, dotted texture, and numbered 0/50/100 scale. Features an <b>animated glowing capsule progress bar</b> with linked ambient glow and a breathing status dot."
+  },
+  {
+    "type": "image",
+    "path": "/Users/edison/Desktop/个人主页项目/screenshots/ec-lab-charging-progress.png",
+    "caption": "Charging Progress — Dark card with animated glow capsule and hue-based color system"
+  },
+  {
+    "type": "h2",
+    "text": "5. Fluid Interactive Cards"
+  },
+  {
+    "type": "body",
+    "text": "Three responsive <b>fluid interactive glass cards</b> with animated 3D dot matrices, frosted glass panels, and colored glow themes. Each card responds to mouse movement with <b>lerped 3D tilt</b>, <b>mouse-tracked glare</b>, and <b>parallax layers</b>."
+  },
+  {
+    "type": "image",
+    "path": "/Users/edison/Desktop/个人主页项目/screenshots/fluid-interactive-cards.png",
+    "caption": "Fluid Interactive Cards — 3D tilt, mouse-tracked glare, and parallax glass cards"
+  },
+  {
+    "type": "h2",
+    "text": "6. Ostraka UI Cards"
+  },
+  {
+    "type": "body",
+    "text": "A three-card visual identity layout with <b>bold pink and soft blue</b> panels. Features large clean sans-serif typography, minimal arrow marks, geometric SVG shapes, and strong negative space."
+  },
+  {
+    "type": "image",
+    "path": "/Users/edison/Desktop/个人主页项目/screenshots/ostraka-ui-cards.png",
+    "caption": "Ostraka UI Cards — Bold pink and soft blue editorial card layout"
+  },
+  {
+    "type": "h2",
+    "text": "7. Pixel Icon Library"
+  },
+  {
+    "type": "body",
+    "text": "A clean vertical pixel icon library archive with soft off-white background, white rounded category cards, and <b>rose accent</b> details. Each row shows pixel-style emoji icons with compact category metadata."
+  },
+  {
+    "type": "image",
+    "path": "/Users/edison/Desktop/个人主页项目/screenshots/pixel-icon-library.png",
+    "caption": "Pixel Icon Library — Rose-tinted category archive with pixel emoji icons"
+  },
+  {
+    "type": "h2",
+    "text": "8. Visual Notes Magnifier"
+  },
+  {
+    "type": "body",
+    "text": "An interactive visual notes page with a <b>circular glass magnifier</b> that follows pointer/touch movement. Features duplicated content layers, a <b>circular clipped magnified layer</b>, frosted physical lens with etched conic tick marks, and glass refraction shadows."
+  },
+  {
+    "type": "image",
+    "path": "/Users/edison/Desktop/个人主页项目/screenshots/visual-notes-magnifier.png",
+    "caption": "Visual Notes Magnifier — Interactive circular glass lens with pointer tracking"
+  },
+  {
+    "type": "h2",
+    "text": "9. Craft Family Design System"
+  },
+  {
+    "type": "body",
+    "text": "A dark-themed design language showcase extracted from the Craft Family ecosystem. Core visual elements include <b>radial ambient lighting</b>, <b>glassmorphism product cards</b> with gentle float animation and shine sweep, <b>series toggle</b> (Efficiency white / Life yellow), <b>blur-in entrance</b>, <b>dock navigation</b> with active glow states, and a <b>glass modal</b> with backdrop blur. The palette is anchored by Craft Black (#171717), Craft Yellow (#facc15), and Craft Gray (#f5f5f7). Typography pairs Inter with JetBrains Mono. All interactions are implemented in pure CSS/JS without external dependencies."
+  },
+  {
+    "type": "pagebreak"
+  },
+  {
+    "type": "h1",
+    "text": "Worthwise — Valuation Workbench"
+  },
+  {
+    "type": "body",
+    "text": "<b>Worthwise</b> is a full-stack independent valuation workbench deployed at <b>edsionc.top/wvp</b>. It provides retail investors with a transparent, evidence-based company valuation tool — combining DCF modeling, relative valuation, and AI-powered fact-checking in a guided workflow."
+  },
+  {
+    "type": "callout",
+    "text": "Tech Stack: Backend (Python FastAPI + SQLite) · Frontend (React 18 + Vite + Tailwind CSS + Ant Design) · Desktop (Electron) · Deployment (Nginx + systemd)"
+  },
+  {
+    "type": "h2",
+    "text": "Architecture"
+  },
+  {
+    "type": "body",
+    "text": "The backend is built with <b>FastAPI</b> providing RESTful APIs for authentication, session management, DCF recalculation, and multi-market company search (US, Hong Kong, A-share). SQLite serves as the persistence layer with a clean protocol-based store abstraction. The frontend is a <b>React 18 SPA</b> with Vite bundling, featuring a component library built on <b>Radix UI</b> primitives and <b>Ant Design</b>."
+  },
+  {
+    "type": "h2",
+    "text": "Key Features"
+  },
+  {
+    "type": "bullet",
+    "text": "<b>DCF Valuation Engine</b>: Free cash flow projection, terminal value calculation, and sensitivity analysis"
+  },
+  {
+    "type": "bullet",
+    "text": "<b>AI Fact-Checking</b>: Evidence validation with source tracking, confidence scoring, and truth verification"
+  },
+  {
+    "type": "bullet",
+    "text": "<b>Multi-Market Search</b>: Company lookup by ticker, Chinese name, English name, or pinyin across US/HK/A-share"
+  },
+  {
+    "type": "bullet",
+    "text": "<b>Dual-Mode Workbench</b>: Beginner guided mode with step-by-step wizards and Advanced Beta grid for pro users"
+  },
+  {
+    "type": "bullet",
+    "text": "<b>Bilingual i18n</b>: Full English and Simplified Chinese UI with inline explanation hints"
+  },
+  {
+    "type": "bullet",
+    "text": "<b>Electron Desktop App</b>: Cross-platform desktop application with admin panel for user management"
+  },
+  {
+    "type": "bullet",
+    "text": "<b>Staged Workflow</b>: Build → Review → Read pipeline with Kanban-style result board"
+  },
+  {
+    "type": "h2",
+    "text": "Technical Highlights"
+  },
+  {
+    "type": "body",
+    "text": "The application implements a <b>three-stage valuation pipeline</b>: Build (data input and assumption setting), Review (value, trust, evidence, and next-move analysis), and Read (tag-style emphasis for result interpretation). The DCF engine supports multiple model strategies with real-time recalculation, while the AI service layer abstracts provider selection (DeepSeek/Claude/mock) through a factory pattern."
+  },
+  {
+    "type": "pagebreak"
+  },
+  {
+    "type": "h1",
+    "text": "GMM Thesis — Academic Research"
+  },
+  {
+    "type": "body",
+    "text": "Master's thesis research on <b>Gaussian Mixture Model (GMM) surrogate modeling for human-induced floor vibration response</b> in long-span structures. The research addresses the computational inefficiency of traditional Monte Carlo simulations by developing a probabilistic surrogate model."
+  },
+  {
+    "type": "h2",
+    "text": "Research Contributions"
+  },
+  {
+    "type": "bullet",
+    "text": "Developed a <b>GMM-based surrogate model</b> to replace costly Monte Carlo simulations for floor vibration analysis"
+  },
+  {
+    "type": "bullet",
+    "text": "Implemented <b>Latin Hypercube Sampling (LHS)</b> for efficient parameter space exploration"
+  },
+  {
+    "type": "bullet",
+    "text": "Validated the model against AISC design guidelines and international human-induced vibration standards"
+  },
+  {
+    "type": "bullet",
+    "text": "Applied <b>viscous damper</b> optimization for vibration mitigation in long-span floor systems"
+  },
+  {
+    "type": "h2",
+    "text": "Technical Implementation"
+  },
+  {
+    "type": "body",
+    "text": "The research workflow included <b>Python</b> scripts for data processing and template generation, <b>MATLAB</b> for structural analysis and GMM implementation, and <b>OriginLab</b> for scientific visualization. The thesis defense presentation was built as an interactive <b>open-slide</b> deck — a React-based slide framework rendering 1920×1080 canvas pages."
+  },
+  {
+    "type": "pagebreak"
+  },
+  {
+    "type": "h1",
+    "text": "EDSIONC Platform"
+  },
+  {
+    "type": "body",
+    "text": "<b>EDSIONC</b> (edsionc.top) is my personal technology platform that serves as the umbrella for all my projects. It hosts the EC LAB design system, the Worthwise valuation workbench, and provides a unified deployment infrastructure."
+  },
+  {
+    "type": "h2",
+    "text": "Platform Architecture"
+  },
+  {
+    "type": "bullet",
+    "text": "<b>Nginx</b> reverse proxy routing multiple sub-applications under a single domain"
+  },
+  {
+    "type": "bullet",
+    "text": "<b>systemd</b> service management for backend processes with automatic restart"
+  },
+  {
+    "type": "bullet",
+    "text": "<b>Python</b> server with automatic project discovery for the EC LAB preview gallery"
+  },
+  {
+    "type": "bullet",
+    "text": "Independent authentication and data stores between sub-applications"
+  },
+  {
+    "type": "spacer",
+    "pt": 12
+  },
+  {
+    "type": "h1",
+    "text": "Skills & Technologies"
+  },
+  {
+    "type": "table",
+    "headers": ["Category", "Technologies"],
+    "rows": [
+      ["Languages", "Python, JavaScript (ES6+), MATLAB, LaTeX"],
+      ["Backend", "FastAPI, SQLite, Pydantic, JWT Auth, RESTful API"],
+      ["Frontend", "React 18, Vite, Tailwind CSS, Radix UI, Ant Design 6"],
+      ["Desktop", "Electron, electron-builder, IPC"],
+      ["UI/Design", "HTML5, CSS3, SVG, 3D Transforms, Glassmorphism"],
+      ["DevOps", "Nginx, systemd, Linux Server, Shell Scripting"],
+      ["AI/ML", "DeepSeek API, Claude API, GMM, Surrogate Modeling"],
+      ["Tools", "Git, VS Code, Playwright, OriginLab, AutoCAD"]
+    ],
+    "col_widths": [0.25, 0.75]
+  },
+  {
+    "type": "spacer",
+    "pt": 12
+  },
+  {
+    "type": "h1",
+    "text": "Contact & Links"
+  },
+  {
+    "type": "body",
+    "text": "All projects are available online and the source code is maintained on GitHub."
+  },
+  {
+    "type": "bullet",
+    "text": "Website: <b>edsionc.top</b>"
+  },
+  {
+    "type": "bullet",
+    "text": "EC LAB: <b>ec.edisonc.top</b>"
+  },
+  {
+    "type": "bullet",
+    "text": "Worthwise: <b>edsionc.top/wvp</b>"
+  },
+  {
+    "type": "bullet",
+    "text": "Email: <b>research@edsionc.top</b>"
+  },
+  {
+    "type": "spacer",
+    "pt": 24
+  },
+  {
+    "type": "divider"
+  },
+  {
+    "type": "caption",
+    "text": "Portfolio generated June 2026 · Cheng Jiarui (Edison) · All projects designed and built independently"
+  }
+]

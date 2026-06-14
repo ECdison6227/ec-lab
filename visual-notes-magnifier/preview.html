@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EC LAB / Visual Notes Magnifier</title>
+<style>
+    /* =========================================
+       Design Tokens & Variables
+       ========================================= */
+    :root {
+        /* Allowed Fonts */
+        --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        --font-serif: Georgia, "Times New Roman", Times, serif;
+        --font-zh: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+
+        /* Allowed Radii */
+        --radius-none: 0px;
+        --radius-sm: 6px;
+        --radius-md: 16px;
+        --radius-lg: 28px;
+
+        /* Colors */
+        --bg-color: #f6f6f4; /* 更柔和的高级灰白背景 */
+        --text-primary: #121212;
+        --text-secondary: #777777;
+        --line-color: rgba(0, 0, 0, 0.06);
+
+        /* Lens Configuration */
+        --lens-size: 440px; /* 放大镜整体外径 */
+        --rim-thickness: 38px; /* 玻璃外圈厚度 */
+        --lens-radius: calc(var(--lens-size) / 2);
+        --lens-inner-radius: calc(var(--lens-radius) - var(--rim-thickness)); /* 透镜内径 */
+        --scale-factor: 1.6; /* 放大倍率 */
+
+        /* Dynamic Mouse Position */
+        --mx: 50vw;
+        --my: 50vh;
+    }
+
+    @media (max-width: 768px) {
+        :root {
+            --lens-size: 260px;
+            --rim-thickness: 24px;
+            --scale-factor: 1.3;
+        }
+        body { overflow: auto; }
+        .hero-container {
+            left: 5vw;
+            top: 45%;
+            width: 90vw;
+            max-width: none;
+            transform: translateY(-50%);
+        }
+        h1 { font-size: clamp(2rem, 8vw, 3rem); letter-spacing: -0.02em; }
+        p.description { margin-top: 1.5rem; font-size: 0.9rem; max-width: 90%; }
+        .meta-top-left { top: 3vh; left: 5vw; font-size: 0.65rem; }
+        .meta-bottom-right { bottom: 3vh; right: 5vw; font-size: 0.65rem; }
+        .floating-btn { width: 44px; height: 44px; right: 3vw; }
+        .texture-dots { width: 70vw; height: 50vh; }
+        .grid-lines { background-size: 12vw 12vh; }
+        .lens-text svg { display: none; }
+    }
+
+    /* =========================================
+       Base Reset
+       ========================================= */
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        background-color: var(--bg-color);
+        color: var(--text-primary);
+        font-family: var(--font-sans);
+        overflow: hidden; 
+        user-select: none; 
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    #app {
+        width: 100vw;
+        height: 100vh;
+        position: relative;
+    }
+
+    /* =========================================
+       Layer Architecture (Fixing the Ghosting)
+       ========================================= */
+    .layer {
+        position: absolute;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+    }
+
+    /* 底层，正常显示 */
+    .base-layer {
+        z-index: 1;
+        background-color: var(--bg-color);
+    }
+
+    /* 放大层的“裁剪遮罩容器” - 绝对不缩放，只负责裁剪和跟随鼠标 */
+    .magnified-wrapper {
+        z-index: 5;
+        clip-path: circle(var(--lens-inner-radius) at var(--mx) var(--my));
+        /* 【关键修复】：赋予背景色，彻底阻挡底层内容透出，消除重影 */
+        background-color: var(--bg-color); 
+    }
+
+    /* 放大层的“实际内容” - 负责真正的缩放，原点跟随鼠标 */
+    .magnified-content {
+        position: absolute;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        transform-origin: var(--mx) var(--my);
+        transform: scale(var(--scale-factor));
+        /* 轻微模拟放大镜的对比度变化 */
+        filter: contrast(1.02) saturate(1.05);
+    }
+
+    /* =========================================
+       Scene Content & Typography 
+       ========================================= */
+    .grid-lines {
+        position: absolute;
+        inset: 0;
+        background-image: 
+            linear-gradient(to right, var(--line-color) 1px, transparent 1px),
+            linear-gradient(to bottom, var(--line-color) 1px, transparent 1px);
+        background-size: 8vw 8vh;
+        mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
+        -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
+        opacity: 0.4;
+    }
+
+    .texture-dots {
+        position: absolute;
+        right: 5vw;
+        top: 0;
+        width: 50vw;
+        height: 70vh;
+        background-image: radial-gradient(rgba(0,0,0,0.15) 1px, transparent 1px);
+        background-size: 6px 6px;
+        mask-image: linear-gradient(220deg, black 20%, transparent 70%);
+        -webkit-mask-image: linear-gradient(220deg, black 20%, transparent 70%);
+    }
+
+    .meta-group {
+        position: absolute;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+    .meta-top-left {
+        top: 6vh;
+        left: 6vw;
+    }
+    .meta-bottom-right {
+        bottom: 6vh;
+        right: 6vw;
+        text-align: right;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+    }
+    .zh-text {
+        font-family: var(--font-zh);
+        letter-spacing: 0.05em;
+    }
+
+    .hero-container {
+        position: absolute;
+        left: 20vw;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 70vw;
+        max-width: 900px;
+    }
+
+    h1 {
+        font-size: clamp(3rem, 6vw, 6.5rem);
+        font-weight: 500;
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+        margin-bottom: 0.2em;
+    }
+
+    .serif-italic {
+        font-family: var(--font-serif);
+        font-style: italic;
+        font-weight: 400;
+    }
+
+    .mono-amp {
+        font-family: var(--font-mono);
+        font-size: 0.65em;
+        font-weight: 400;
+        opacity: 0.4;
+        vertical-align: middle;
+        margin: 0 0.1em;
+    }
+
+    .outline-text {
+        color: transparent;
+        -webkit-text-stroke: 1.5px var(--text-primary);
+    }
+
+    p.description {
+        margin-top: 3rem;
+        font-size: clamp(1rem, 1.2vw, 1.25rem);
+        color: #555;
+        line-height: 1.6;
+        max-width: 480px;
+        letter-spacing: -0.01em;
+    }
+
+    /* =========================================
+       Glass UI (The Physical Lens Interface)
+       ========================================= */
+    .glass-ui {
+        position: absolute;
+        width: var(--lens-size);
+        height: var(--lens-size);
+        left: var(--mx);
+        top: var(--my);
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 10;
+        /* 柔和的全局弥散阴影 */
+        filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.08)) drop-shadow(0 8px 16px rgba(0, 0, 0, 0.04));
+    }
+
+    /* 1. 外圈磨砂玻璃边框 (Frosted Rim) */
+    .lens-rim {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        /* 只保留外圈部分，中间掏空 */
+        -webkit-mask: radial-gradient(transparent calc(var(--lens-inner-radius) - 0.5px), black var(--lens-inner-radius));
+        mask: radial-gradient(transparent calc(var(--lens-inner-radius) - 0.5px), black var(--lens-inner-radius));
+
+        /* 背景模糊底层内容 */
+        backdrop-filter: blur(12px) saturate(1.1);
+        -webkit-backdrop-filter: blur(12px) saturate(1.1);
+
+        background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.2) 100%);
+        border: 1px solid rgba(255,255,255,0.8);
+        box-shadow: inset 0 0 20px rgba(255,255,255,0.5);
+    }
+
+    /* 2. 外圈密集的测算刻度 (Etched Ticks) */
+    .lens-ticks {
+        position: absolute;
+        inset: 12px;
+        border-radius: 50%;
+        -webkit-mask: radial-gradient(transparent var(--lens-inner-radius), black calc(var(--lens-inner-radius) + 1px));
+        background: repeating-conic-gradient(
+            from 0deg, 
+            transparent 0deg, 
+            transparent 1.5deg, 
+            rgba(255,255,255, 0.9) 1.5deg, 
+            rgba(255,255,255, 0.9) 1.8deg
+        );
+        opacity: 0.85;
+    }
+
+    /* 3. 内圈玻璃的厚度折射与高光 (Inner Lens Specular & Refraction) */
+    .lens-inner-glass {
+        position: absolute;
+        inset: var(--rim-thickness);
+        border-radius: 50%;
+
+        /* 模拟镜片边缘的厚度和轻微色散暗角 */
+        box-shadow: 
+            inset 0 0 24px rgba(0, 0, 0, 0.06),
+            inset 0 40px 40px rgba(255, 255, 255, 0.4), /* 顶部受光面 */
+            inset 0 -10px 20px rgba(0, 0, 0, 0.03),     /* 底部阴影 */
+            inset 0 0 0 1px rgba(255, 255, 255, 0.5);   /* 内侧锐利倒角 */
+
+        background: radial-gradient(circle at 40% 40%, rgba(255,255,255,0.1) 0%, transparent 60%);
+    }
+
+    /* 4. 环绕文字动画 (Circular Text) */
+    .lens-text {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        animation: spin 60s linear infinite;
+        opacity: 0.9;
+    }
+
+    @keyframes spin {
+        100% { transform: rotate(360deg); }
+    }
+
+    /* =========================================
+       Floating UI (Music Button)
+       ========================================= */
+    .floating-btn {
+        position: absolute;
+        right: 4vw;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 56px;
+        height: 56px;
+        border-radius: 50%; 
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow: 
+            0 8px 24px rgba(0,0,0,0.06), 
+            inset 0 0 0 1px #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 20;
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        color: #111;
+    }
+
+    .floating-btn:hover {
+        transform: translateY(-50%) scale(1.08);
+    }
+</style>
+</head>
+<body>
+
+<!-- 
+  [内容模板] 保证底图层和放大图层的内容绝对一致 
+-->
+<template id="scene-content">
+    <div class="texture-dots"></div>
+    <div class="grid-lines"></div>
+
+    <div class="meta-group meta-top-left">
+        EC LAB<br>
+        <span class="zh-text">ec 的实验室</span><br><br>
+        VISUAL NOTES
+    </div>
+
+    <div class="hero-container">
+        <h1>AI Workflow</h1>
+        <h1>Design <span class="mono-amp">&</span> <span class="serif-italic">Prompt</span></h1>
+        <h1><span class="outline-text">Code</span> / Inspiration</h1>
+
+        <p class="description">
+            From early concepts to polished interfaces,<br>
+            we shape ideas, refine products, and craft<br>
+            visuals that make every detail count.
+        </p>
+    </div>
+
+    <div class="meta-group meta-bottom-right">
+        RECORD.<br>
+        EXPLORE.<br>
+        SHARE.
+    </div>
+</template>
+
+<div id="app">
+
+    <!-- 1. 基础底层 (Base Layer) -->
+    <div class="layer base-layer" id="base-layer"></div>
+
+    <!-- 2. 放大裁剪层 (Wrapper负责圆形裁剪遮罩，阻止重影) -->
+    <div class="layer magnified-wrapper">
+        <!-- 实际内容在此进行原点缩放 -->
+        <div class="magnified-content" id="magnified-layer"></div>
+    </div>
+
+    <!-- 3. 玻璃透镜UI (视觉外壳) -->
+    <div class="glass-ui">
+        <div class="lens-rim"></div>
+        <div class="lens-ticks"></div>
+        <div class="lens-inner-glass"></div>
+
+        <div class="lens-text">
+            <svg viewBox="0 0 440 440" width="100%" height="100%">
+                <defs>
+                    <!-- 路径半径 = 外径的一半 - 边框厚度的一半 (220 - 19 = 201) -->
+                    <path id="text-arc" d="M 220, 220 m -201, 0 a 201,201 0 1,1 402,0 a 201,201 0 1,1 -402,0" fill="none" />
+                </defs>
+                <text fill="#ffffff" font-size="11" font-family="var(--font-mono)" letter-spacing="4px" font-weight="500">
+                    <textPath href="#text-arc" startOffset="0%">
+                        · MEASURING DETAILS // EC LAB VISUAL NOTES // RECORD · EXPLORE · SHARE //
+                    </textPath>
+                </text>
+            </svg>
+        </div>
+    </div>
+
+    <!-- 4. 悬浮按钮 -->
+    <div class="floating-btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13"></path>
+            <circle cx="6" cy="18" r="3"></circle>
+            <circle cx="18" cy="16" r="3"></circle>
+        </svg>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 将模板注入到基础层和放大层
+        const templateHTML = document.getElementById('scene-content').innerHTML;
+        document.getElementById('base-layer').innerHTML = templateHTML;
+        document.getElementById('magnified-layer').innerHTML = templateHTML;
+
+        const app = document.getElementById('app');
+
+        // 使用插值动画让跟随更平滑且具备惯性质感
+        let targetX = window.innerWidth / 2;
+        let targetY = window.innerHeight / 2;
+        let currentX = targetX;
+        let currentY = targetY;
+
+        // 降低lerp值让放大镜有物理的拖拽重量感
+        const lerpFactor = 0.15;
+
+        // 监听鼠标
+        window.addEventListener('mousemove', (e) => {
+            targetX = e.clientX;
+            targetY = e.clientY;
+        });
+
+        // 监听触摸 (移动端适配)
+        window.addEventListener('touchmove', (e) => {
+            targetX = e.touches[0].clientX;
+            targetY = e.touches[0].clientY;
+        }, { passive: true });
+
+        // 防止窗口调整时放大镜飞出屏幕
+        window.addEventListener('resize', () => {
+            targetX = Math.min(targetX, window.innerWidth);
+            targetY = Math.min(targetY, window.innerHeight);
+        });
+
+        // 渲染循环
+        function render() {
+            // 平滑计算当前坐标
+            currentX += (targetX - currentX) * lerpFactor;
+            currentY += (targetY - currentY) * lerpFactor;
+
+            // 将坐标传递给 CSS 变量，一次性驱动 Clip-Path, Transform-Origin 和 Lens UI
+            app.style.setProperty('--mx', `${currentX}px`);
+            app.style.setProperty('--my', `${currentY}px`);
+
+            requestAnimationFrame(render);
+        }
+
+        render();
+    });
+</script>
+</body>
+</html>

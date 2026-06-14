@@ -1,0 +1,27 @@
+{
+  "id": "fluid-interactive-cards",
+  "title": "Fluid Interactive Cards",
+  "html_prompt": "Create a single-file HTML/CSS/JS preview for an EC LAB inspiration asset: a responsive set of three fluid interactive glass cards on a soft gray ambient background. Preserve the final design structure, proportions, colors, texture, and motion: large rounded cards, animated 3D dot matrices, frosted glass lower panels, subtle grain, colored glow themes, mouse-tracked glare, lerped 3D tilt, parallax layers, and soft shadow physics. Use EC LAB / ec 的实验室 / Visual Notes / AI Workflow / Design / Prompt / Code / Inspiration / Reusable Assets / Record. Explore. Share. as the identity and content. Do not use external assets, images, CDN, frameworks, Google Fonts, or custom font files. Build everything with HTML, CSS, SVG, gradients, blur, shadows, transforms, pseudo-elements, and text. Use only the EC font sets and EC radius tokens.",
+  "css": {
+    "--primary": "#3b82f6",
+    "--background": "#eef0f3",
+    "--surface": "rgba(255, 255, 255, 0.65)",
+    "--text": "#111111",
+    "--muted": "#999999",
+    "--accent": "#8b5cf6",
+    "--radius-none": "0px",
+    "--radius-sm": "6px",
+    "--radius-md": "16px",
+    "--radius-lg": "28px",
+    "--blur": "28px",
+    "--shadow": "0 20px 50px -20px rgba(59, 130, 246, 0.25)",
+    "--grain": "data:image/svg+xml turbulence noise overlay",
+    "--font-sans": "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+    "--font-serif": "Georgia, \"Times New Roman\", Times, serif",
+    "--font-mono": "\"SFMono-Regular\", Consolas, \"Liberation Mono\", Menlo, monospace",
+    "--font-cn": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", system-ui, sans-serif"
+  },
+  "files": {
+    "preview": "preview.html"
+  }
+}

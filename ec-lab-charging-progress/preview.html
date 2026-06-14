@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EC LAB UI</title>
+    <style>
+        :root {
+            /* Radius Tokens */
+            --radius-none: 0px;
+            --radius-sm: 6px;
+            --radius-md: 16px;
+            --radius-lg: 28px;
+            
+            /* Typography Sets */
+            --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            --font-chinese: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+            
+            /* Color Palette */
+            --bg-page: #f2f2f7;
+            --card-surface: #222224;
+            --card-gradient-top: #2a2a2d;
+            --card-gradient-bottom: #161618;
+            --text-primary: #ffffff;
+            --text-secondary: #98989f;
+            --text-tertiary: #5e5e64;
+            
+            /* 动态充电色相 (0=红, 60=黄, 120=绿) */
+            --charge-hue: 0; 
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--bg-page);
+            font-family: var(--font-sans);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* 3D 场景与布光 */
+        .scene {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 底部环境光 - 颜色跟随进度条联动 */
+        .ambient-glow {
+            position: absolute;
+            bottom: -20px;
+            width: 280px;
+            height: 120px;
+            /* 改用径向渐变，彻底消除模糊边缘的硬边问题 */
+            background: radial-gradient(ellipse at center, hsla(var(--charge-hue), 100%, 50%, 0.45) 0%, hsla(var(--charge-hue), 100%, 50%, 0) 70%);
+            border-radius: 50%;
+            z-index: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+            /* 移除了 transition，因为 JS 是 60 帧在更新颜色，有 transition 反而会产生之前红色的拖影 */
+        }
+
+        /* 主卡片 */
+        .card {
+            position: relative;
+            z-index: 10;
+            width: 340px;
+            height: 340px;
+            background: linear-gradient(180deg, var(--card-gradient-top) 0%, var(--card-gradient-bottom) 100%);
+            border-radius: var(--radius-lg);
+            padding: 36px 32px;
+            box-sizing: border-box;
+            box-shadow: 
+                0 30px 60px -12px rgba(0, 0, 0, 0.4),
+                inset 0 1px 2px rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 点阵纹理叠加 */
+        .card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: var(--radius-lg);
+            background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+            background-size: 14px 14px;
+            background-position: center 2px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 噪点纹理叠加 */
+        .card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: var(--radius-lg);
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)"/></svg>');
+            opacity: 0.02;
+            pointer-events: none;
+            z-index: 2;
+            mix-blend-mode: overlay;
+        }
+
+        /* 内容层 */
+        .card-content {
+            position: relative;
+            z-index: 10;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 头部信息 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 44px;
+        }
+
+        .title-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .title-group h1 {
+            margin: 0;
+            color: var(--text-primary);
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            line-height: 1;
+        }
+
+        .title-group h2 {
+            margin: 0;
+            color: var(--text-secondary);
+            font-family: var(--font-chinese);
+            font-size: 15px;
+            font-weight: 400;
+            letter-spacing: 0.2px;
+        }
+
+        /* 状态指示灯 - 颜色联动 + 呼吸动画 */
+        @keyframes pulse {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background: hsl(var(--charge-hue), 100%, 55%);
+            border-radius: 50%;
+            margin-top: 6px;
+            box-shadow: 
+                0 0 12px 2px hsla(var(--charge-hue), 100%, 50%, 0.7),
+                0 0 24px 6px hsla(var(--charge-hue), 100%, 50%, 0.3);
+            animation: pulse 1.5s infinite ease-in-out;
+            /* 移除了 background 的过渡，消除红色残影 */
+        }
+
+        /* 刻度线部分 */
+        .scale-section {
+            margin-bottom: 20px;
+            padding: 0 12px;
+        }
+
+        .scale-labels {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-secondary);
+            font-size: 17px;
+            font-weight: 400;
+            margin-bottom: 12px;
+            padding: 0 2px;
+        }
+
+        .scale-marks {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 8px;
+        }
+
+        .mark {
+            background-color: var(--text-tertiary);
+            border-radius: var(--radius-sm);
+        }
+
+        .mark.main {
+            width: 2px;
+            height: 8px;
+        }
+
+        .mark.dot {
+            width: 3px;
+            height: 3px;
+            opacity: 0.6;
+        }
+
+        /* 进度条外框 */
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 56px; 
+            border-radius: var(--radius-lg);
+            background: rgba(26, 26, 28, 0.5);
+            /* 边框也加入一点点当前颜色的反光 */
+            border: 1px solid hsla(var(--charge-hue), 100%, 50%, 0.2);
+            box-shadow: 
+                inset 0 4px 12px rgba(0, 0, 0, 0.8),
+                0 0 20px hsla(var(--charge-hue), 100%, 50%, 0.05);
+            overflow: hidden; /* 防止内部溢出 */
+            /* 移除了 border-color 过渡 */
+        }
+
+        /* 进度条填充层 - 动态发光渐变 */
+        .slider-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            border-radius: var(--radius-lg);
+            /* 渐变基于当前的主色相 (--charge-hue)，尾端颜色更深，头部颜色更亮 */
+            background: linear-gradient(
+                90deg, 
+                hsl(var(--charge-hue), 90%, 30%) 0%, 
+                hsl(var(--charge-hue), 100%, 45%) 50%, 
+                hsl(calc(var(--charge-hue) + 10), 100%, 60%) 100%
+            );
+            box-shadow: 
+                inset 0 3px 6px rgba(255, 255, 255, 0.35),
+                inset 0 -3px 6px rgba(0, 0, 0, 0.3),
+                0 0 25px 4px hsla(var(--charge-hue), 100%, 50%, 0.5),
+                0 0 45px 10px hsla(var(--charge-hue), 100%, 50%, 0.2);
+            display: flex;
+            justify-content: flex-end;
+            will-change: width;
+            /* 保证最小宽度呈现出一个圆球形，避免刚开始时形状被切断 */
+            min-width: 56px; 
+        }
+
+        /* 进度条头部的立体高光 */
+        .slider-fill::after {
+            content: '';
+            width: 28px;
+            height: 100%;
+            border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+            background: radial-gradient(circle at 60% 30%, rgba(255, 255, 255, 0.8) 0%, transparent 50%);
+            mix-blend-mode: overlay;
+        }
+
+        /* 底部文案 */
+        .footer {
+            margin-top: auto;
+            text-align: center;
+            color: var(--text-tertiary);
+            font-size: 13px;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+            padding-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scene">
+        <!-- 底部环境光 -->
+        <div class="ambient-glow"></div>
+        
+        <div class="card">
+            <div class="card-content">
+                
+                <!-- 头部 -->
+                <div class="header">
+                    <div class="title-group">
+                        <h1>EC LAB</h1>
+                        <h2>ec 的充电站</h2>
+                    </div>
+                    <!-- 呼吸状态灯 -->
+                    <div class="status-dot"></div>
+                </div>
+
+                <!-- 刻度线 -->
+                <div class="scale-section">
+                    <div class="scale-labels">
+                        <span>0</span>
+                        <span>50</span>
+                        <span>100</span>
+                    </div>
+                    <div class="scale-marks">
+                        <div class="mark main"></div>
+                        <div class="mark dot"></div>
+                        <div class="mark dot"></div>
+                        <div class="mark dot"></div>
+                        <div class="mark dot"></div>
+                        <div class="mark dot"></div>
+                        <div class="mark main"></div>
+                        <div class="mark dot"></div>
+                        <div class="mark dot"></div>
+                        <div class="mark dot"></div>
+                        <div class="mark dot"></div>
+                        <div class="mark dot"></div>
+                        <div class="mark main"></div>
+                    </div>
+                </div>
+
+                <!-- 自动充电进度条 -->
+                <div class="slider-container" id="sliderContainer">
+                    <div class="slider-fill" id="sliderFill" style="width: 0%;"></div>
+                </div>
+
+                <!-- 底部信息 -->
+                <div class="footer">
+                    Charging... Please wait.
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fill = document.getElementById('sliderFill');
+        const root = document.documentElement;
+        
+        let progress = 0;
+        let isCharging = true;
+        
+        // 设置充电速度 (数值越大跑得越快)
+        const chargeSpeed = 0.3; 
+
+        function animateCharge() {
+            if (isCharging) {
+                progress += chargeSpeed;
+                
+                // 当达到 100% 时，暂停并重启
+                if (progress >= 100) {
+                    progress = 100;
+                    isCharging = false;
+                    
+                    // 停留在满电状态 2 秒钟，然后归零重新开始
+                    setTimeout(() => {
+                        progress = 0;
+                        isCharging = true;
+                        requestAnimationFrame(animateCharge);
+                    }, 2000);
+                }
+            }
+
+            // 计算色相 Hue: 
+            // 0% 时 hue 是 0 (红色)
+            // 100% 时 hue 是 120 (绿色)
+            // 中间 50% 自动会过渡成黄橙色
+            const currentHue = (progress / 100) * 120;
+            
+            // 将计算出的色相写入 CSS 变量，全局样式（进度条、光晕、指示灯）会自动更新
+            root.style.setProperty('--charge-hue', currentHue);
+            
+            // 更新进度条宽度
+            fill.style.width = `${progress}%`;
+
+            // 继续下一帧动画
+            if (isCharging) {
+                requestAnimationFrame(animateCharge);
+            }
+        }
+
+        // 启动动画
+        requestAnimationFrame(animateCharge);
+    </script>
+</body>
+</html>
+
+

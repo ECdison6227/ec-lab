@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ostraka UI Cards</title>
+<style>
+  :root {
+    /* Required Radius Tokens */
+    --radius-none: 0px;
+    --radius-sm: 6px;
+    --radius-md: 16px;
+    --radius-lg: 28px;
+
+    /* Color Palette Extracted from Image */
+    --color-bg: #F6F4EE;
+    --color-pink: #D9366A;
+    --color-blue: #C0DEFF;
+    --color-dark: #100822;
+    --color-white: #FFFFFF;
+
+    /* Typography Constraints */
+    --font-clean: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  /* Reset & Base Styles */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    font-family: var(--font-clean);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 4rem 2rem;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Layout */
+  .container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    max-width: 1240px;
+    width: 100%;
+  }
+
+  /* Shared Card Styles */
+  .card {
+    border-radius: var(--radius-lg);
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    aspect-ratio: 0.72; /* Enforces the tall rectangular shape */
+    min-height: 480px;
+    box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.08), 
+                0 10px 20px -5px rgba(0, 0, 0, 0.03);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-pink {
+    background-color: var(--color-pink);
+    color: var(--color-white);
+  }
+
+  .card-blue {
+    background-color: var(--color-blue);
+    color: var(--color-dark);
+  }
+
+  /* Typography Utilities */
+  .h1 {
+    font-size: clamp(2rem, 2.5vw, 2.75rem);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .text-sm {
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  .text-dark {
+    color: var(--color-dark);
+  }
+
+  /* Logo Component */
+  .logo-group {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  
+  .logo-text {
+    font-size: 1.5rem;
+    font-weight: 400;
+    letter-spacing: -0.05em;
+  }
+
+  .arrow-icon {
+    width: 10px;
+    height: 10px;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: square;
+    fill: none;
+    margin-bottom: 8px; /* Optically aligns arrow with top of lowercase text */
+  }
+
+  /* Card 1 Specifics */
+  .card-1 {
+    justify-content: space-between;
+  }
+  
+  .card-1 .top-content {
+    max-width: 95%;
+  }
+
+  .card-1 .bottom-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .card-1 .stacked-list {
+    text-align: right;
+    opacity: 0.95;
+  }
+
+  /* Card 2 Specifics */
+  .card-2 {
+    justify-content: space-between;
+  }
+
+  .card-2 .top-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .card-2 .main-logo-svg {
+    width: 90px;
+    height: 90px;
+    fill: var(--color-dark);
+  }
+
+  .card-2 .h1 {
+    max-width: 90%;
+  }
+
+  /* Card 3 Specifics */
+  .card-3 {
+    /* Using grid for perfect vertical distribution as seen in design */
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  .card-3 .logo-group {
+    gap: 0.5rem;
+  }
+
+  .card-3 .small-logo-svg {
+    width: 28px;
+    height: 28px;
+    fill: var(--color-dark);
+  }
+
+  .card-3 .middle-content {
+    display: flex;
+    align-items: center;
+  }
+
+  .card-3 .bottom-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Button Component */
+  .btn {
+    background-color: var(--color-dark);
+    color: var(--color-white);
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--radius-lg);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    transition: transform 0.2s ease;
+  }
+
+  .btn:hover {
+    transform: translateY(-1px);
+  }
+  
+  .btn .arrow-icon {
+    margin-bottom: 0; /* Reset alignment for button context */
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 1024px) {
+    .container {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .card {
+      aspect-ratio: auto;
+      min-height: 500px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      grid-template-columns: 1fr;
+    }
+    .card {
+      padding: 2.5rem;
+      min-height: 450px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  
+  <!-- Card 1 -->
+  <div class="card card-pink card-1">
+    <div class="top-content">
+      <h1 class="h1">Strategy, design,<br>and full&ndash;stack<br>development.</h1>
+    </div>
+    <div class="bottom-content">
+      <div class="logo-group text-dark">
+        <span class="logo-text">EC LAB</span>
+        <svg class="arrow-icon" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 10L10 2M10 2H4M10 2V8"/>
+        </svg>
+      </div>
+      <div class="stacked-list text-sm">
+        Strategy.<br>Design.<br>Development.
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2 -->
+  <div class="card card-blue card-2">
+    <div class="top-content">
+      <svg class="main-logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <!-- E Shape -->
+        <path d="M 10 20 C 10 14.477 14.477 10 20 10 H 40 V 30 H 30 V 40 H 40 V 60 H 30 V 70 H 40 V 90 H 20 C 14.477 90 10 85.523 10 80 V 20 Z" fill="currentColor"/>
+        <!-- C Shape -->
+        <path d="M 90 10 H 70 C 58.954 10 50 18.954 50 30 V 70 C 50 81.046 58.954 90 70 90 H 90 V 70 H 75 C 72.239 70 70 67.761 70 65 V 35 C 70 32.239 72.239 30 75 30 H 90 V 10 Z" fill="currentColor"/>
+      </svg>
+      <span class="text-sm">edisonc.top</span>
+    </div>
+    <div class="bottom-content">
+      <h1 class="h1">Building something?<br>Call EC LAB.</h1>
+    </div>
+  </div>
+
+  <!-- Card 3 -->
+  <div class="card card-pink card-3">
+    <div class="top-content">
+      <div class="logo-group text-dark">
+        <svg class="small-logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- E Shape -->
+          <path d="M 10 20 C 10 14.477 14.477 10 20 10 H 40 V 30 H 30 V 40 H 40 V 60 H 30 V 70 H 40 V 90 H 20 C 14.477 90 10 85.523 10 80 V 20 Z" fill="currentColor"/>
+          <!-- C Shape -->
+          <path d="M 90 10 H 70 C 58.954 10 50 18.954 50 30 V 70 C 50 81.046 58.954 90 70 90 H 90 V 70 H 75 C 72.239 70 70 67.761 70 65 V 35 C 70 32.239 72.239 30 75 30 H 90 V 10 Z" fill="currentColor"/>
+        </svg>
+        <span class="logo-text" style="margin-left: 2px;">EC LAB</span>
+        <svg class="arrow-icon" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 10L10 2M10 2H4M10 2V8"/>
+        </svg>
+      </div>
+    </div>
+    <div class="middle-content">
+      <h1 class="h1">Discover new<br>possibilities.</h1>
+    </div>
+    <div class="bottom-content">
+      <span class="text-sm">Find your team</span>
+      <a href="#" class="btn">
+        View more
+        <svg class="arrow-icon" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 10L10 2M10 2H4M10 2V8"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EC LAB - Global Payments</title>
+    <style>
+        /* === Design Tokens === */
+        :root {
+            /* Typography */
+            --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            --font-serif: Georgia, "Times New Roman", Times, serif;
+            
+            /* Radii strictly as requested */
+            --radius-none: 0px;
+            --radius-sm: 6px;
+            --radius-md: 16px;
+            --radius-lg: 28px;
+
+            /* Colors */
+            --bg-page: #eef0f3;
+            --bg-card: #ffffff;
+            --text-main: #0f172a; /* Dark navy/blue */
+            --text-muted: #64748b;
+            --accent-blue: #1e3a8a;
+            --accent-light: #eff6ff;
+            --accent-brand: #2563eb;
+            --grid-color: rgba(200, 210, 225, 0.3);
+            
+            /* UI Colors */
+            --ui-green: #10b981;
+            --ui-border: #e2e8f0;
+        }
+
+        /* === Reset & Base === */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 24px;
+            -webkit-font-smoothing: antialiased;
+        }
+        a { text-decoration: none; color: inherit; }
+        button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+        /* === Layout Wrappers === */
+        .page-wrapper {
+            background-color: var(--bg-card);
+            width: 100%;
+            max-width: 1280px;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Contains the grid and internal bleeds */
+            position: relative;
+        }
+
+        /* === Header === */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 40px;
+            position: relative;
+            z-index: 10;
+        }
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+            letter-spacing: -0.02em;
+        }
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+        .nav-links a:hover { color: var(--text-main); }
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: var(--radius-lg); /* Pill shape due to height */
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-outline {
+            border: 1px solid var(--ui-border);
+            color: var(--text-main);
+        }
+        .btn-outline:hover { background: #f8fafc; }
+        .btn-primary {
+            background-color: var(--accent-blue);
+            color: white;
+            border: 1px solid transparent;
+        }
+        .btn-primary:hover { background-color: #172a6e; }
+        
+        .arrow-icon {
+            width: 14px; height: 14px;
+            stroke: currentColor; stroke-width: 2; fill: none;
+            stroke-linecap: round; stroke-linejoin: round;
+        }
+
+        /* === Hero Section === */
+        .hero {
+            position: relative;
+            padding: 60px 20px 0;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+
+        /* Background Effects */
+        .bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+            background-size: 60px 60px;
+            background-position: center top;
+            z-index: 0;
+            /* Fade out grid towards bottom */
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 40%, transparent 80%);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 40%, transparent 80%);
+        }
+        .bg-glow {
+            position: absolute;
+            top: 10%; left: 50%;
+            transform: translateX(-50%);
+            width: 800px; height: 600px;
+            background: radial-gradient(circle, rgba(239,246,255,0.8) 0%, rgba(255,255,255,0) 70%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Hero Content */
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            max-width: 700px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            background-color: var(--accent-light);
+            color: var(--text-main);
+            border-radius: var(--radius-lg);
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 24px;
+            border: 1px solid rgba(37, 99, 235, 0.1);
+        }
+        .badge svg { width: 14px; height: 14px; color: var(--accent-brand); }
+        
+        h1 {
+            font-size: 4.5rem;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            color: var(--accent-blue);
+            margin-bottom: 20px;
+        }
+        h1 .serif {
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-weight: 400;
+            color: var(--accent-brand);
+            padding-right: 4px; /* Fix italic clipping */
+        }
+        
+        .hero-sub {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 32px;
+            max-width: 580px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .hero-sub b {
+            color: var(--accent-brand);
+            font-weight: 600;
+        }
+        .hero-sub strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-bottom: 60px;
+        }
+
+        /* === Floating 3D Icons === */
+        .floating-icons-container {
+            position: absolute;
+            inset: 0;
+            z-index: 5;
+            pointer-events: none;
+        }
+        .cube-icon {
+            position: absolute;
+            width: 72px; height: 72px;
+            background: #ffffff;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* 3D styling approximation */
+            box-shadow: 
+                inset 2px 2px 4px rgba(255,255,255,1),
+                inset -2px -2px 4px rgba(0,0,0,0.03),
+                0 0 0 1px rgba(255,255,255,0.5); /* crisp edge */
+        }
+        .cube-icon::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: var(--radius-md);
+            z-index: -1;
+            transform: translateZ(-10px); /* visual depth cue if in 3d context, here just logical */
+        }
+        .cube-icon svg { width: 36px; height: 36px; z-index: 2; }
+
+        /* Specific Icon Placements & Colors */
+        .icon-eth {
+            top: 20%; left: 15%;
+            transform: perspective(800px) rotateY(15deg) rotateX(15deg) rotateZ(-10deg);
+            box-shadow: 15px 20px 30px rgba(98, 126, 234, 0.2), inset 1px 1px 2px #fff;
+        }
+        .icon-eth svg path { fill: #627eea; }
+
+        .icon-usdt {
+            top: 22%; right: 18%;
+            transform: perspective(800px) rotateY(-15deg) rotateX(10deg) rotateZ(10deg);
+            box-shadow: -10px 20px 30px rgba(38, 161, 123, 0.2), inset 1px 1px 2px #fff;
+        }
+        .icon-usdt svg path { fill: #26a17b; }
+
+        .icon-btc {
+            top: 50%; left: 12%;
+            transform: perspective(800px) rotateY(20deg) rotateX(-10deg) rotateZ(-5deg);
+            box-shadow: 20px 10px 30px rgba(247, 147, 26, 0.2), inset 1px 1px 2px #fff;
+        }
+        .icon-btc svg path { fill: #f7931a; }
+
+        .icon-usdc {
+            top: 45%; right: 15%;
+            transform: perspective(800px) rotateY(-20deg) rotateX(-15deg) rotateZ(15deg);
+            box-shadow: -15px 15px 30px rgba(39, 117, 202, 0.2), inset 1px 1px 2px #fff;
+        }
+        .icon-usdc svg path { fill: #2775ca; }
+
+
+        /* === App Mockups === */
+        .mockups-wrapper {
+            position: relative;
+            width: 100%;
+            height: 400px; /* Limits visible area */
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 10;
+            overflow: hidden;
+        }
+        
+        /* Fade overlay at bottom of phones */
+        .mockups-wrapper::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 150px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), #ffffff);
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .phone-frame {
+            width: 280px;
+            height: 560px;
+            background: #ffffff;
+            border-radius: var(--radius-lg);
+            border: 8px solid #1e293b; /* Dark frame */
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15), inset 0 0 0 2px #475569;
+            position: absolute;
+            bottom: -160px; /* Push down to crop */
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        /* Positioning */
+        .phone-center {
+            z-index: 3;
+            transform: translateY(0);
+        }
+        .phone-left {
+            z-index: 2;
+            transform: translateX(-180px) translateY(60px) scale(0.9);
+            opacity: 0.9;
+        }
+        .phone-right {
+            z-index: 2;
+            transform: translateX(180px) translateY(60px) scale(0.9);
+            opacity: 0.9;
+        }
+
+        /* Phone UI Base Elements */
+        .status-bar {
+            height: 44px;
+            display: flex;
+            justify-content: space-between;
+            padding: 14px 20px 0;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-icons { display: flex; gap: 4px; align-items: center; }
+        .dynamic-island {
+            position: absolute;
+            top: 8px; left: 50%;
+            transform: translateX(-50%);
+            width: 90px; height: 24px;
+            background: #000;
+            border-radius: var(--radius-lg);
+        }
+
+        /* Center Phone UI Specifics */
+        .ui-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+        }
+        .ui-icon-btn {
+            width: 32px; height: 32px;
+            border-radius: var(--radius-lg); /* circle */
+            background: var(--accent-light);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .ui-title { font-weight: 600; font-size: 1.1rem; }
+        
+        .ui-balance-section {
+            text-align: center;
+            padding: 20px;
+        }
+        .ui-account-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: var(--radius-lg);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+        .ui-account-pill .dot {
+            width: 6px; height: 6px; background: var(--ui-green); border-radius: var(--radius-lg);
+        }
+        .ui-balance-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
+        .ui-balance-amount { font-size: 2.2rem; font-weight: 700; letter-spacing: -0.05em; color: var(--text-main); margin-bottom: 8px;}
+        .ui-balance-hint { font-size: 0.7rem; color: var(--accent-brand); background: var(--accent-light); padding: 4px 10px; border-radius: var(--radius-lg); display: inline-block;}
+
+        .ui-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 20px;
+        }
+        .ui-action-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .ui-action-btn {
+            width: 48px; height: 48px;
+            background: #f8fafc;
+            border: 1px solid var(--ui-border);
+            border-radius: var(--radius-md);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .ui-action-btn svg { width: 20px; height: 20px; stroke: var(--text-main); stroke-width: 1.5; fill: none; }
+        .ui-action-item:first-child .ui-action-btn { background: #ecfdf5; border-color: #d1fae5; }
+        .ui-action-item:first-child .ui-action-btn svg { stroke: var(--ui-green); }
+
+        /* Side Phone UI (Transaction History) */
+        .ui-tx-header { padding: 10px 20px 20px; }
+        .ui-tx-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .ui-tx-title { font-weight: 600; font-size: 1rem; }
+        .ui-tabs { display: flex; gap: 16px; font-size: 0.8rem; color: var(--text-muted); font-weight: 500; border-bottom: 1px solid var(--ui-border); padding-bottom: 8px;}
+        .ui-tab.active { color: var(--text-main); background: #f1f5f9; padding: 2px 8px; border-radius: var(--radius-lg); }
+        
+        .ui-tx-list { padding: 0 20px; }
+        .ui-tx-date { font-size: 0.7rem; color: var(--text-muted); margin: 10px 0; }
+        .ui-tx-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .ui-tx-left { display: flex; align-items: center; gap: 12px; }
+        .ui-avatar {
+            width: 36px; height: 36px;
+            border-radius: var(--radius-lg); /* circle */
+            background: var(--accent-light);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: 600; color: var(--accent-blue);
+        }
+        .ui-avatar.dark { background: #334155; color: white; }
+        .ui-avatar.gray { background: #e2e8f0; color: var(--text-muted); }
+        .ui-tx-info { display: flex; flex-direction: column; gap: 2px; }
+        .ui-tx-name { font-size: 0.85rem; font-weight: 500; }
+        .ui-tx-desc { font-size: 0.7rem; color: var(--text-muted); }
+        .ui-tx-amount { font-size: 0.85rem; font-weight: 600; text-align: right; }
+        .ui-tx-amount.positive { color: var(--ui-green); }
+        .ui-tx-status { font-size: 0.65rem; color: var(--text-muted); }
+
+
+        /* === Footer === */
+        .trust-footer {
+            padding: 40px 20px;
+            text-align: center;
+            background: #ffffff;
+            position: relative;
+            z-index: 30;
+        }
+        .trust-text {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+        .trust-text b {
+            color: var(--accent-blue);
+            font-weight: 500;
+        }
+        .trust-logos {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 60px;
+            flex-wrap: wrap;
+            opacity: 0.5; /* Muted appearance matching image */
+            filter: grayscale(100%);
+        }
+        
+        /* Stylized Text Logos to avoid external assets */
+        .logo-amex { font-family: var(--font-sans); font-weight: 800; font-size: 14px; line-height: 1; text-align: left; letter-spacing: -0.5px;}
+        .logo-visa { font-family: var(--font-sans); font-weight: 800; font-size: 24px; font-style: italic; letter-spacing: -1px;}
+        .logo-gcloud { display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 18px; letter-spacing: -0.5px; }
+
+        /* === Responsive === */
+        @media (max-width: 900px) {
+            h1 { font-size: 3.5rem; }
+            .floating-icons-container { display: none; } /* Hide 3d icons on smaller screens for cleaner look */
+            .phone-left, .phone-right { display: none; } /* Show only center phone */
+            .mockups-wrapper { height: 350px; }
+        }
+        @media (max-width: 600px) {
+            header { flex-direction: column; gap: 16px; padding: 20px; }
+            .nav-links { display: none; } /* Hide nav on mobile */
+            h1 { font-size: 2.5rem; }
+            .cta-group { flex-direction: column; width: 100%; max-width: 300px; margin: 0 auto 40px; }
+            .trust-logos { gap: 30px; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="page-wrapper">
+        
+        <!-- Header -->
+        <header>
+            <div class="logo">EC LAB</div>
+            <nav class="nav-links">
+                <a href="#">Features</a>
+                <a href="#">How it works</a>
+                <a href="#">Use cases</a>
+                <a href="#">Pricing</a>
+            </nav>
+            <div class="header-actions">
+                <button class="btn btn-outline">Login</button>
+                <button class="btn btn-primary">
+                    Get Started 
+                    <svg class="arrow-icon" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="bg-grid"></div>
+            <div class="bg-glow"></div>
+            
+            <div class="hero-content">
+                <div class="badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle></svg>
+                    CIRCLE Certified Member
+                </div>
+                
+                <h1>Get Paid Globally.<br><span class="serif">Card</span> or <span class="serif">Crypto</span>.</h1>
+                
+                <p class="hero-sub">
+                    One payment layer for modern internet businesses. Accept card and <b>crypto payments from anywhere</b> - and receive payouts directly in <strong>USDC</strong>.
+                </p>
+                
+                <div class="cta-group">
+                    <button class="btn btn-primary">
+                        Start accepting payments
+                        <svg class="arrow-icon" viewBox="0 0 24 24" style="width:12px;height:12px;margin-left:4px;"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                    <button class="btn btn-outline">Talk with us</button>
+                </div>
+            </div>
+
+            <!-- Floating 3D Icons -->
+            <div class="floating-icons-container">
+                <div class="cube-icon icon-eth">
+                    <!-- Simplistic ETH SVG -->
+                    <svg viewBox="0 0 32 32"><path d="M15.925 23.969l-9.819-5.794L15.925 32l9.825-13.825-9.825 5.794zM16.075 0L6.25 16.35l9.825 5.781 9.819-5.781L16.075 0z"/></svg>
+                </div>
+                <div class="cube-icon icon-usdt">
+                     <!-- Simplistic USDT SVG -->
+                    <svg viewBox="0 0 32 32"><path d="M16 32C7.163 32 0 24.837 0 16S7.163 0 16 0s16 7.163 16 16-7.163 16-16 16zm0-2c7.732 0 14-6.268 14-14S23.732 2 16 2 2 8.268 2 16s6.268 14 14 14zm-3-20h6v3h-2v8h-2v-8h-2v-3z"/></svg>
+                </div>
+                <div class="cube-icon icon-btc">
+                     <!-- Simplistic BTC SVG -->
+                    <svg viewBox="0 0 32 32"><path d="M22.6 15.6c.9-1.2 1.4-2.8 1.1-4.7-.6-3.8-3.9-4.8-8.2-4.8H10v20h6.1c4.6 0 8.3-1.3 9.1-5.6.3-1.8-.1-3.6-1.1-4.9zM13.5 9h3.6c1.8 0 3.3.4 3.5 1.9.2 1.5-1 2.1-3 2.1h-4.1V9zm4.7 13.9h-4.7v-4.5h4.6c2.2 0 3.6.5 3.3 2.3-.2 1.7-1.5 2.2-3.2 2.2z"/></svg>
+                </div>
+                <div class="cube-icon icon-usdc">
+                     <!-- Simplistic USDC SVG -->
+                    <svg viewBox="0 0 32 32"><path d="M16 32C7.163 32 0 24.837 0 16S7.163 0 16 0s16 7.163 16 16-7.163 16-16 16zm0-3c7.18 0 13-5.82 13-13S23.18 3 16 3 3 8.82 3 16s5.82 13 13 13zm-1-18h2v2h1c1.1 0 2 .9 2 2v2c0 1.1-.9 2-2 2h-4v2h5v2h-2v2h-2v-2h-1c-1.1 0-2-.9-2-2v-2c0-1.1.9-2 2-2h4v-2h-5v-2h2v-2z"/></svg>
+                </div>
+            </div>
+
+            <!-- App Mockups -->
+            <div class="mockups-wrapper">
+                
+                <!-- Left Phone -->
+                <div class="phone-frame phone-left">
+                    <div class="dynamic-island"></div>
+                    <div class="status-bar"><span>9:41</span><div class="status-icons"><svg width="16" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg><svg width="18" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2"><rect x="2" y="7" width="20" height="10" rx="2"/></svg></div></div>
+                    
+                    <div class="ui-tx-header">
+                        <div class="ui-tx-title-row">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                            <div class="ui-tx-title">Transaction History</div>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                        </div>
+                        <div class="ui-tabs">
+                            <div class="ui-tab active">All</div>
+                            <div class="ui-tab">Income</div>
+                            <div class="ui-tab">Sent</div>
+                            <div class="ui-tab">Request</div>
+                        </div>
+                    </div>
+                    
+                    <div class="ui-tx-list">
+                        <div class="ui-tx-date">08/01</div>
+                        <div class="ui-tx-item">
+                            <div class="ui-tx-left">
+                                <div class="ui-avatar dark">MB</div>
+                                <div class="ui-tx-info"><div class="ui-tx-name">Mikal Boria</div><div class="ui-tx-desc">Income</div></div>
+                            </div>
+                            <div><div class="ui-tx-amount positive">+$350.00</div><div class="ui-tx-status">Just now</div></div>
+                        </div>
+                        <div class="ui-tx-item">
+                            <div class="ui-tx-left">
+                                <div class="ui-avatar gray">UB</div>
+                                <div class="ui-tx-info"><div class="ui-tx-name">Uber</div><div class="ui-tx-desc">Sent ago</div></div>
+                            </div>
+                            <div><div class="ui-tx-amount">-$210.00</div><div class="ui-tx-status">1 hour ago</div></div>
+                        </div>
+                        <div class="ui-tx-item">
+                            <div class="ui-tx-left">
+                                <div class="ui-avatar gray">RS</div>
+                                <div class="ui-tx-info"><div class="ui-tx-name">Ryan Scott</div><div class="ui-tx-desc">Transfer</div></div>
+                            </div>
+                            <div><div class="ui-tx-amount">-$132.40</div><div class="ui-tx-status">3 days ago</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Center Phone (Main) -->
+                <div class="phone-frame phone-center">
+                    <div class="dynamic-island"></div>
+                    <div class="status-bar"><span>9:41</span><div class="status-icons"><svg width="16" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg><svg width="18" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2"><rect x="2" y="7" width="20" height="10" rx="2"/></svg></div></div>
+                    
+                    <div class="ui-header">
+                        <div class="ui-icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
+                        <div class="ui-title">My Account</div>
+                        <div class="ui-icon-btn" style="position: relative;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                            <span style="position:absolute; top:-2px; right:-2px; width:8px; height:8px; background:var(--ui-green); border-radius:var(--radius-lg); border:2px solid #fff;"></span>
+                        </div>
+                    </div>
+
+                    <div class="ui-balance-section">
+                        <div class="ui-account-pill">
+                            <span class="dot"></span> **** 3425 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                        </div>
+                        <div class="ui-balance-label">Your Balance</div>
+                        <div class="ui-balance-amount">$86,290.49</div>
+                        <div class="ui-balance-hint">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:2px; vertical-align:middle;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                            You sold USD 0 in last 24hours
+                        </div>
+                    </div>
+
+                    <div class="ui-actions">
+                        <div class="ui-action-item">
+                            <div class="ui-action-btn"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+                            Send
+                        </div>
+                        <div class="ui-action-item">
+                            <div class="ui-action-btn"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+                            Request
+                        </div>
+                        <div class="ui-action-item">
+                            <div class="ui-action-btn"><svg viewBox="0 0 24 24"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg></div>
+                            Exchange
+                        </div>
+                        <div class="ui-action-item">
+                            <div class="ui-action-btn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+                            More
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Phone -->
+                <div class="phone-frame phone-right">
+                    <div class="dynamic-island"></div>
+                    <div class="status-bar"><span>9:41</span><div class="status-icons"><svg width="16" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg><svg width="18" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2"><rect x="2" y="7" width="20" height="10" rx="2"/></svg></div></div>
+                    
+                    <div class="ui-tx-header">
+                        <div class="ui-tx-title-row">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                            <div class="ui-tx-title">Transaction History</div>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                        </div>
+                        <div class="ui-tabs">
+                            <div class="ui-tab active">All</div>
+                            <div class="ui-tab">Income</div>
+                            <div class="ui-tab">Sent</div>
+                            <div class="ui-tab">Request</div>
+                        </div>
+                    </div>
+                    
+                    <div class="ui-tx-list">
+                        <div class="ui-tx-date">Today</div>
+                        <div class="ui-tx-item">
+                            <div class="ui-tx-left">
+                                <div class="ui-avatar dark">MB</div>
+                                <div class="ui-tx-info"><div class="ui-tx-name">Mikal Boria</div><div class="ui-tx-desc">Income</div></div>
+                            </div>
+                            <div><div class="ui-tx-amount positive">+$350.00</div><div class="ui-tx-status">Just now</div></div>
+                        </div>
+                        <div class="ui-tx-item">
+                            <div class="ui-tx-left">
+                                <div class="ui-avatar gray">UB</div>
+                                <div class="ui-tx-info"><div class="ui-tx-name">Uber</div><div class="ui-tx-desc">Sent ago</div></div>
+                            </div>
+                            <div><div class="ui-tx-amount">-$210.00</div><div class="ui-tx-status">1 hour ago</div></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="trust-footer">
+            <div class="trust-text">Trusted by <b>leading names</b> worldwide.</div>
+            <div class="trust-logos">
+                <!-- Approximated logos using HTML/SVG to avoid external assets -->
+                <div class="logo-amex">AMERICAN<br>EXPRESS</div>
+                
+                <svg width="40" height="24" viewBox="0 0 40 24" fill="none">
+                    <circle cx="12" cy="12" r="12" fill="#currentColor" opacity="0.8"/>
+                    <circle cx="28" cy="12" r="12" fill="#currentColor" opacity="0.6"/>
+                </svg>
+
+                <div class="logo-visa">VISA</div>
+
+                <div class="logo-gcloud">
+                    <svg width="24" height="20" viewBox="0 0 24 20" fill="currentColor">
+                        <path d="M12.5 4.5a5.5 5.5 0 0 0-10.4 2.5A4 4 0 0 0 3 14.5h15a5 5 0 0 0 1.5-9.8 5.5 5.5 0 0 0-7-0.2z"/>
+                    </svg>
+                    Google Cloud
+                </div>
+
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M4 6h16v3H4zm0 5h16v3H4zm0 5h16v3H4z"/>
+                </svg>
+            </div>
+        </footer>
+
+    </div>
+
+</body>
+</html>
