@@ -1,24 +1,38 @@
-*中文版: [README.md](README.md)*
+> 中文版: [README.md](README.md)
 
 ---
 
-# EC LAB — Design Portfolio
+# EC LAB — My Personal UI Design Portfolio
 
-Personal design portfolio & UI inspiration archive.
+Hey, welcome to my little design corner 👋
 
-- **Live site**: https://ec.edsionc.top
-- **GitHub**: https://github.com/ECdison6227/ec-lab
+This is where I keep all the UI experiments I find interesting — glassmorphism, liquid animations, pixel art, magnifier light effects, you name it. Whenever a design idea makes me go *"oh, this is cool"*, I build a static demo of it and drop it here. Every project lives in a single HTML file — no frameworks, no CDN, no build step. **Open it, read the code, copy what you like.**
 
-Pure static site. No backend required.
+> 💡 If you also like to tinker with UI, feel free to browse. Found something you like? Just fork or copy it.
+> 🎨 Live preview: [**ec.edsionc.top**](https://ec.edsionc.top)
+> ⭐ Drop a star if you enjoy the work
 
 ---
 
-## Local Preview
+## How to use the code here
 
-```bash
-python3 server.py 4173
-# Open http://localhost:4173/index.html
+Each project folder has just three files:
+
 ```
+project-name/
+├── preview.html   ← Complete HTML/CSS/JS with styles and interactions
+├── meta.json      ← Prompt and design token metadata
+└── README.md      ← Design notes (optional)
+```
+
+**Just use it:**
+1. Open `preview.html` and pick the part you like
+2. Copy & paste it into your own project
+3. Want to recolor it? Search for `var(--xxx)` in the CSS and change a few variables
+
+**Use it as a reference:**
+- **Prompts**: Every `meta.json` `prompt` field is ready to feed to GPT / Claude / Cursor — the AI will generate new pages in the same style for you
+- **CSS Tokens**: Colors, fonts, spacing, radii, shadows — all named and ready to copy
 
 ---
 
@@ -36,14 +50,35 @@ python3 server.py 4173
 | 08 | Visual Notes Magnifier | Magnifier gradient, floating panels, light mapping |
 | 09 | Craft Family Design System | Glassmorphism, ambient light, Dock navigation |
 
-Each project is a single HTML/CSS/JS file. No CDN, no frameworks. View source directly.
+---
+
+## Local preview
+
+```bash
+# Option 1: Python (easiest)
+python3 -m http.server 4173
+
+# Option 2: Just open it
+# Double-click index.html (some project prompts may not load fully)
+```
+
+Then open `http://localhost:4173/index.html`.
 
 ---
 
-## Tech Notes
+## Tech notes
 
-- Each `preview.html` is a **single self-contained file**: no CDN, no frameworks, no external assets.
-- `index.html` fetches `projects.json` and individual `meta.json` files at runtime.
-- If `projects.json` fails to load, `index.html` falls back to an inline project list.
+- **Zero dependencies**: no CDN, no frameworks, no build tools — just vanilla browser
+- **Pure static**: deploy anywhere — GitHub Pages, Cloudflare Pages, Netlify, Vercel, or any static host
+- **Hackable**: CSS variables are centralized in `:root` — change one value, the whole theme updates
+- **Responsive**: every project works on desktop and mobile
 
 ---
+
+## If you like what you see
+
+- ⭐ Star the repo
+- 🔁 Fork it and remix
+- 🐦 Send me screenshots of your own work — happy to chat design anytime
+
+— Let's make UI a little more fun.

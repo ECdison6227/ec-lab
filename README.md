@@ -1,20 +1,38 @@
-# EC LAB — 设计作品集
-
-个人设计作品集与 UI 灵感存档。
-
-- **线上地址**: https://ec.edsionc.top
-- **GitHub**: https://github.com/ECdison6227/ec-lab
-
-纯静态站点，无需后端。
+> English version: [README_EN.md](README_EN.md)
 
 ---
 
-## 本地预览
+# EC LAB — 我的个人 UI 设计作品集
 
-```bash
-python3 server.py 4173
-# 打开 http://localhost:4173/index.html
+嗨，欢迎来到我的设计角落 👋
+
+这里是我平时把玩各种 UI 灵感的存档库——玻璃拟态、液态动效、像素风、放大镜光影……凡是我觉得「这个有意思」的设计想法，我都会做一版纯静态的 demo 放进来。每一个项目都只用一个 HTML 文件，没有框架、没有 CDN、没有打包工具，**直接打开就能看，复制粘贴就能用**。
+
+> 💡 如果你也是个喜欢折腾 UI 的朋友，欢迎来逛逛，看到喜欢的样式直接 fork / copy 走就行。
+> 🎨 在线预览：[**ec.edsionc.top**](https://ec.edsionc.top)
+> ⭐ 喜欢就点个 Star 呗～
+
+---
+
+## 怎么用这里的代码
+
+每个项目文件夹里只有三样东西：
+
 ```
+project-name/
+├── preview.html   ← 完整的 HTML/CSS/JS，自带样式 + 交互
+├── meta.json      ← 提示词和设计 token 元数据
+└── README.md      ← 设计说明（可选）
+```
+
+**直接用：**
+1. 打开 `preview.html`，选中你喜欢的某一块代码
+2. 复制粘贴到自己的项目里
+3. 想改成自己的主题色？搜 CSS 里的 `var(--xxx)` 改几个变量就行
+
+**作为参考：**
+- 提示词：每个 `meta.json` 的 `prompt` 字段可以直接喂给 GPT / Claude / Cursor，AI 就能照着风格给你生成新的页面
+- CSS Tokens：色彩、字体、间距、圆角、阴影……全都命名好了，可以直接抄走
 
 ---
 
@@ -32,16 +50,35 @@ python3 server.py 4173
 | 08 | Visual Notes Magnifier | 放大渐变、悬浮面板、光影映射 |
 | 09 | Craft Family Design System | 玻璃拟态、氛围光、Dock 导航 |
 
-每个项目都是单文件 HTML/CSS/JS，无 CDN、无框架，可直接查看源码。
+---
+
+## 本地预览
+
+```bash
+# 方式 1：Python（最简单的）
+python3 -m http.server 4173
+
+# 方式 2：直接双击
+# 打开 index.html 即可（部分项目提示词可能加载不全）
+```
+
+然后打开 `http://localhost:4173/index.html`。
 
 ---
 
 ## 技术说明
 
-- 每个 `preview.html` 都是**单文件自包含**：无 CDN、无框架、无外部资源。
-- `index.html` 运行时拉取 `projects.json` 和各个 `meta.json`。
-- 如果 `projects.json` 加载失败，`index.html` 会回退到内联项目列表。
+- **零依赖**：无 CDN、无框架、无打包工具，浏览器原生实现
+- **纯静态**：可直接部署到 GitHub Pages、Cloudflare Pages、Netlify、Vercel 或任何静态服务器
+- **可二次开发**：CSS 变量都集中在 `:root`，改一个值全站生效
+- **响应式**：所有项目在桌面和移动端都做了适配
 
 ---
 
-*English version: [README_EN.md](README_EN.md)*
+## 喜欢的话
+
+- ⭐ 给仓库点个 Star
+- 🔁 Fork 一份改改玩
+- 🐦 看到好的设计截图欢迎发我：作品展示 / 私下交流都行
+
+—— 一起把 UI 这件事做得更有意思一点。

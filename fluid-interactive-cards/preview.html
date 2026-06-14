@@ -1,610 +1,323 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EC LAB - Fluid Interactive Cards</title>
-    <style>
-        :root {
-            /* Radii - Strict */
-            --radius-none: 0px;
-            --radius-sm: 6px;
-            --radius-md: 16px;
-            --radius-lg: 28px;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>EC LAB / Fluid Interactive Cards</title>
+<style>
+  :root {
+    --bg: #eef0f3;
+    --text-primary: #111;
+    --text-secondary: #555;
+    --text-muted: #999;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; }
+  body {
+    background: var(--bg);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding: 32px 16px;
+    min-height: 100vh;
+  }
 
-            /* Font Stacks */
-            --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-            --font-serif: Georgia, "Times New Roman", Times, serif;
-            --font-cn: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+  .showcase {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+  @media (min-width: 900px) {
+    .showcase { grid-template-columns: repeat(3, 1fr); }
+  }
 
-            /* Global Colors */
-            --bg-page: #eef0f3;
-            --text-primary: #111111;
-            --text-secondary: #555555;
-            --text-muted: #999999;
-            --glass-white: rgba(255, 255, 255, 0.65);
-            --glass-border: rgba(255, 255, 255, 0.9);
-            --divider: rgba(0, 0, 0, 0.05);
-        }
+  /* ----- THEME ----- */
+  .card { --c: #3b82f6; --glow: rgba(59, 130, 246, 0.25); --light: #8cb6ff; }
+  .card.purple { --c: #8b5cf6; --glow: rgba(139, 92, 246, 0.25); --light: #c4b5fd; }
+  .card.teal { --c: #14b8a6; --glow: rgba(20, 184, 166, 0.25); --light: #5eead4; }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+  .card {
+    position: relative;
+    width: 100%;
+    background: linear-gradient(180deg, #fafbfc 0%, #fff 100%);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px -6px rgba(0,0,0,0.06), 0 12px 30px -12px var(--glow);
+    isolation: isolate;
+  }
 
-        body {
-            background-color: var(--bg-page);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            font-family: var(--font-sans);
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            overflow-x: hidden;
-            padding: 60px 20px;
-            perspective: 2000px;
-        }
+  /* Dots section - takes 55% of card */
+  .dots-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 0.75;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 100%, rgba(255,255,255,0.6), transparent 60%);
+  }
+  .dots-grid {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: repeat(15, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 4px;
+    padding: 14% 6% 10%;
+    -webkit-mask-image: radial-gradient(ellipse 110% 100% at 50% 100%, black 20%, transparent 90%);
+    mask-image: radial-gradient(ellipse 110% 100% at 50% 100%, black 20%, transparent 90%);
+  }
+  .dot {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--light);
+    box-shadow: inset 0 0 2px rgba(255,255,255,0.6);
+    animation: dotPulse 4s ease-in-out infinite;
+  }
+  @keyframes dotPulse {
+    0%, 100% { transform: scale(1); opacity: 0.85; }
+    50% { transform: scale(1.08); opacity: 1; }
+  }
+  .dots-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 80%, var(--c) 0%, transparent 50%);
+    mix-blend-mode: overlay;
+    opacity: 0.7;
+    pointer-events: none;
+    animation: glowShift 8s ease-in-out infinite;
+  }
+  @keyframes glowShift {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(10%, -5%); }
+  }
 
-        /* Fluid Ambient Background */
-        .ambient-bg {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            overflow: hidden;
-            background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.8) 0%, transparent 60%);
-        }
-        .blob {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(120px);
-            opacity: 0.3;
-            transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-        .blob-1 { width: 450px; height: 450px; background: #3b82f6; top: -10%; left: 15%; animation: floatBg 18s infinite alternate ease-in-out; }
-        .blob-2 { width: 550px; height: 550px; background: #8b5cf6; bottom: -10%; right: 10%; animation: floatBg 22s infinite alternate-reverse ease-in-out; }
+  /* Glass section - bottom 45% */
+  .glass {
+    padding: 18px 20px 20px;
+    background: rgba(255,255,255,0.65);
+    backdrop-filter: blur(28px) saturate(140%);
+    -webkit-backdrop-filter: blur(28px) saturate(140%);
+    border-top: 1px solid rgba(255,255,255,0.9);
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.7);
+    border: 1px solid rgba(255,255,255,0.9);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+  }
+  .pill-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--c);
+    box-shadow: 0 0 6px var(--glow);
+  }
+  .head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .title { font-size: 22px; font-weight: 500; line-height: 1.1; margin-bottom: 4px; }
+  .title em { font-family: Georgia, serif; font-style: italic; font-weight: 400; }
+  .sub { font-size: 12px; color: var(--text-secondary); }
+  .arrow {
+    flex-shrink: 0;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.05);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    color: var(--text-primary);
+  }
+  .arrow svg { width: 14px; height: 14px; }
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.05), transparent);
+    margin: 0 0 14px;
+  }
+  .features {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .feat {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    flex: 1; min-width: 0;
+  }
+  .feat svg { width: 18px; height: 18px; color: var(--c); }
+  .feat span { font-size: 10.5px; color: var(--text-primary); text-align: center; }
+  .vd { width: 1px; height: 18px; background: rgba(0,0,0,0.06); flex-shrink: 0; }
+  .foot {
+    text-align: center;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 14px;
+  }
 
-        @keyframes floatBg {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(100px, 50px) scale(1.1); }
-        }
-
-        /* Layout Container */
-        .showcase {
-            display: flex;
-            gap: 48px;
-            flex-wrap: wrap;
-            justify-content: center;
-            z-index: 1;
-            max-width: 1300px;
-            transform-style: preserve-3d;
-        }
-
-        /* -----------------------------------
-           THEMES
-           ----------------------------------- */
-        .theme-blue {
-            --theme-core: #003cf0; --theme-light: #8cb6ff; --theme-accent: #3b82f6; 
-            --theme-glow: rgba(59, 130, 246, 0.25); --theme-shadow: rgba(0, 60, 240, 0.15);
-        }
-        .theme-purple {
-            --theme-core: #6d28d9; --theme-light: #c4b5fd; --theme-accent: #8b5cf6; 
-            --theme-glow: rgba(139, 92, 246, 0.25); --theme-shadow: rgba(109, 40, 217, 0.15);
-        }
-        .theme-teal {
-            --theme-core: #0f766e; --theme-light: #5eead4; --theme-accent: #14b8a6; 
-            --theme-glow: rgba(20, 184, 166, 0.25); --theme-shadow: rgba(15, 118, 110, 0.15);
-        }
-
-        /* -----------------------------------
-           CORE CARD WRAPPER
-           ----------------------------------- */
-        .card-wrapper {
-            position: relative;
-            width: 350px;
-            height: 490px;
-            background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
-            border-radius: var(--radius-lg);
-            /* Initial shadow */
-            box-shadow: 
-                0 0 0 1px rgba(255, 255, 255, 1) inset,
-                0 10px 30px -10px rgba(0, 0, 0, 0.05),
-                0 20px 50px -20px var(--theme-glow);
-
-            /* CSS Variables for JS sync */
-            --mx: 50%;
-            --my: 80%;
-            --shine-opacity: 0;
-            --z-offset: 0px;
-
-            transform-style: preserve-3d;
-            cursor: pointer;
-            will-change: transform; /* Hint for rendering engine */
-
-            /* Entry Animation */
-            opacity: 0;
-            transform: translateY(50px) scale(0.95);
-            animation: cardEnter 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes cardEnter {
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        /* -----------------------------------
-           DYNAMIC GLARE & LIGHTING
-           ----------------------------------- */
-        .glare {
-            position: absolute;
-            inset: 0;
-            border-radius: var(--radius-lg);
-            background: radial-gradient(
-                circle at var(--mx) var(--my), 
-                rgba(255, 255, 255, 0.8) 0%, 
-                rgba(255, 255, 255, 0) 60%
-            );
-            opacity: var(--shine-opacity);
-            mix-blend-mode: overlay;
-            pointer-events: none;
-            z-index: 20;
-            transition: opacity 0.3s ease;
-        }
-
-        .noise-overlay {
-            position: absolute; inset: 0; z-index: 10; pointer-events: none; opacity: 0.2; mix-blend-mode: multiply;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-            border-radius: var(--radius-lg);
-        }
-
-        /* -----------------------------------
-           3D DOT MATRIX
-           ----------------------------------- */
-        .dots-section {
-            position: absolute;
-            top: 15px; left: 0; width: 100%; height: 60%;
-            display: flex; justify-content: center;
-            -webkit-mask-image: radial-gradient(ellipse 110% 100% at 50% 100%, black 20%, rgba(0,0,0,0.4) 65%, transparent 95%);
-            z-index: 2;
-            /* Subtly moves back to create deep space */
-            transform: translateZ(calc(var(--z-offset) * -1.5));
-        }
-
-        .dots-grid {
-            display: grid;
-            grid-template-columns: repeat(23, 14px);
-            gap: 2px;
-            justify-content: center; align-content: end;
-            padding-bottom: 50px;
-        }
-
-        .dot {
-            width: 14px; height: 14px; border-radius: 50%;
-            background-color: var(--theme-light);
-            background-image: 
-                radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 50%),
-                radial-gradient(circle at 75% 75%, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0) 60%);
-            box-shadow: inset 0 0 2px rgba(255,255,255,0.6), 0 2px 4px rgba(0,0,0,0.06);
-            /* Continuous gentle breathing */
-            animation: dotWave 5s infinite ease-in-out;
-        }
-
-        /* Dynamic core color tracking the mouse */
-        .dots-color-overlay {
-            position: absolute; inset: 0;
-            background: radial-gradient(circle at var(--mx) var(--my), var(--theme-core) 0%, var(--theme-glow) 35%, transparent 70%);
-            mix-blend-mode: overlay;
-            z-index: 3; pointer-events: none; opacity: 0.85;
-        }
-
-        .dots-blur-overlay {
-            position: absolute; inset: 0;
-            backdrop-filter: blur(2.5px); -webkit-backdrop-filter: blur(2.5px);
-            -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 60%);
-            z-index: 4; pointer-events: none;
-        }
-
-        /* -----------------------------------
-           FOREGROUND GLASS CARD
-           ----------------------------------- */
-        .glass-card {
-            position: absolute;
-            bottom: 0; left: 0; width: 100%; height: 55%;
-            background: var(--glass-white);
-            backdrop-filter: blur(28px) saturate(140%);
-            -webkit-backdrop-filter: blur(28px) saturate(140%);
-            border-top: 1px solid var(--glass-border);
-            border-radius: var(--radius-lg);
-            z-index: 5;
-            padding: 26px;
-            display: flex; flex-direction: column;
-            box-shadow: 
-                inset 0 1px 0 rgba(255,255,255,0.8),
-                0 -4px 24px rgba(0,0,0,0.04);
-
-            /* This reacts to the JS JS lerp value to float out */
-            transform: translateZ(calc(var(--z-offset) * 2));
-            transform-style: preserve-3d;
-        }
-
-        /* Parallax text inside glass card */
-        .parallax-layer-1 { transform: translateZ(calc(var(--z-offset) * 0.5)); }
-        .parallax-layer-2 { transform: translateZ(calc(var(--z-offset) * 0.8)); }
-
-        .pill {
-            display: inline-flex; align-items: center;
-            background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(255,255,255,0.9);
-            padding: 5px 12px; border-radius: 20px;
-            margin-bottom: 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-        }
-
-        .pill-dot {
-            width: 6px; height: 6px; background-color: var(--theme-accent);
-            border-radius: 50%; margin-right: 6px;
-            box-shadow: 0 0 6px var(--theme-glow);
-            animation: pulse-dot 2s infinite alternate;
-        }
-
-        .pill-text { font-family: var(--font-cn); font-size: 10px; color: var(--text-secondary); font-weight: 500; }
-
-        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
-
-        .title { font-size: 28px; color: var(--text-primary); font-weight: 500; letter-spacing: -0.01em; line-height: 1.1; margin-bottom: 6px; }
-        .title-serif { font-family: var(--font-serif); font-style: italic; font-weight: 400; padding-left: 2px; }
-        .subtitle { font-family: var(--font-sans); font-size: 12px; color: var(--text-secondary); }
-
-        .btn-circle {
-            width: 38px; height: 38px; border-radius: 50%;
-            background: #ffffff; border: 1px solid rgba(0,0,0,0.04);
-            display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); color: var(--text-primary);
-            /* Slightly higher parallax for the button */
-            transform: translateZ(calc(var(--z-offset) * 1.5));
-            transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .card-wrapper:hover .btn-circle {
-            background: var(--text-primary); color: #ffffff;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
-
-        .divider-horizontal {
-            height: 1px; width: 100%;
-            background: linear-gradient(90deg, transparent 0%, var(--divider) 15%, var(--divider) 85%, transparent 100%);
-            margin-bottom: 22px;
-        }
-
-        .features { display: flex; justify-content: space-between; align-items: center; flex-grow: 1; padding: 0 4px; }
-        .feature-item { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; }
-        .feature-icon-wrap { color: var(--theme-accent); height: 20px; display: flex; align-items: center; opacity: 0.9; }
-        .feature-text { font-family: var(--font-sans); font-size: 10.5px; color: var(--text-primary); font-weight: 500; text-align: center; }
-        .divider-vertical { width: 1px; height: 20px; background: var(--divider); }
-        .footer { text-align: center; font-size: 10px; color: var(--text-muted); margin-top: auto; padding-top: 16px; }
-
-        /* Keyframes */
-        @keyframes dotWave {
-            0%, 100% { transform: scale(1) translateY(0); opacity: 1; }
-            50% { transform: scale(0.7) translateY(2px); opacity: 0.6; }
-        }
-        @keyframes pulse-dot { 0% { opacity: 0.5; } 100% { opacity: 1; transform: scale(1.1); } }
-
-        /* Staggered load */
-        .card-wrapper:nth-child(1) { animation-delay: 0.1s; }
-        .card-wrapper:nth-child(2) { animation-delay: 0.25s; }
-        .card-wrapper:nth-child(3) { animation-delay: 0.4s; }
-
-        @media (max-width: 768px) {
-            body { padding: 12px 8px; perspective: none; min-height: auto; align-items: flex-start; }
-            .showcase { flex-direction: column; align-items: center; gap: 16px; }
-            .card-wrapper {
-                width: 100%;
-                max-width: 300px;
-                min-width: 0;
-                height: 380px;
-                transform: none !important;
-                box-shadow: 0 0 0 1px rgba(255,255,255,1) inset, 0 6px 18px -6px rgba(0,0,0,0.06), 0 12px 30px -12px var(--theme-glow) !important;
-                border-radius: 22px;
-            }
-            .card-wrapper:hover { transform: none !important; }
-            .dots-section { height: 45%; top: 6px; }
-            .dots-grid { grid-template-columns: repeat(13, 8px); gap: 1.5px; padding-bottom: 20px; }
-            .dot { width: 8px; height: 8px; }
-            .glass-card { padding: 12px 14px; height: 57%; border-radius: 22px; backdrop-filter: blur(20px) saturate(140%); -webkit-backdrop-filter: blur(20px) saturate(140%); }
-            .pill { margin-bottom: 8px; padding: 3px 8px; max-width: 100%; overflow: hidden; }
-            .pill-text { font-size: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-            .header { margin-bottom: 8px; gap: 8px; min-width: 0; }
-            .header > div:first-child { min-width: 0; flex: 1; }
-            .title { font-size: 17px; white-space: nowrap; letter-spacing: -0.01em; margin-bottom: 2px; }
-            .subtitle { font-size: 9.5px; white-space: nowrap; }
-            .btn-circle { width: 26px; height: 26px; flex-shrink: 0; }
-            .btn-circle svg { width: 12px; height: 12px; }
-            .divider-horizontal { margin-bottom: 8px; }
-            .features { gap: 2px; padding: 0; }
-            .feature-item { gap: 3px; min-width: 0; flex: 1; }
-            .feature-icon-wrap { height: 13px; }
-            .feature-icon-wrap svg { width: 11px; height: 11px; }
-            .feature-text { font-size: 7.5px; white-space: nowrap; }
-            .divider-vertical { height: 13px; }
-            .footer { font-size: 7.5px; padding-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-            .glare, .noise-overlay { display: none; }
-        }
-    </style>
+  /* ----- MOBILE ----- */
+  @media (max-width: 600px) {
+    body { padding: 20px 14px; }
+    .showcase { gap: 18px; }
+    .card { border-radius: 20px; }
+    .dots-wrap { aspect-ratio: 1 / 0.7; }
+    .dots-grid { grid-template-columns: repeat(13, 1fr); gap: 2.5px; padding: 10% 6% 6%; }
+    .glass { padding: 16px; }
+    .pill { font-size: 10px; padding: 4px 10px; margin-bottom: 10px; }
+    .head { margin-bottom: 10px; }
+    .title { font-size: 18px; }
+    .sub { font-size: 11px; }
+    .arrow { width: 30px; height: 30px; }
+    .arrow svg { width: 12px; height: 12px; }
+    .divider { margin-bottom: 10px; }
+    .feat svg { width: 16px; height: 16px; }
+    .feat span { font-size: 9.5px; }
+    .foot { font-size: 9.5px; margin-top: 10px; }
+  }
+</style>
 </head>
 <body>
+<div class="showcase">
 
-    <div class="ambient-bg">
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
+  <!-- Card 1: Blue -->
+  <div class="card">
+    <div class="dots-wrap">
+      <div class="dots-grid" id="g1"></div>
+      <div class="dots-glow"></div>
     </div>
-
-    <div class="showcase">
-        <!-- CARD 1: BLUE -->
-        <div class="card-wrapper theme-blue">
-            <div class="glare"></div>
-            <div class="noise-overlay"></div>
-            <div class="dots-section">
-                <div class="dots-grid"></div>
-                <div class="dots-color-overlay"></div>
-                <div class="dots-blur-overlay"></div>
-            </div>
-            <div class="glass-card">
-                <div class="pill parallax-layer-1">
-                    <span class="pill-dot"></span><span class="pill-text">EC LAB ec 的实验室</span>
-                </div>
-                <div class="header parallax-layer-2">
-                    <div>
-                        <h1 class="title">Visual<span class="title-serif">Notes</span></h1>
-                        <p class="subtitle">Record. Explore. Share.</p>
-                    </div>
-                    <div class="btn-circle">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline>
-                        </svg>
-                    </div>
-                </div>
-                <div class="divider-horizontal"></div>
-                <div class="features parallax-layer-1">
-                    <div class="feature-item">
-                        <div class="feature-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4" fill="currentColor" opacity="0.3"/><circle cx="12" cy="12" r="9" stroke-dasharray="2 4"/></svg></div>
-                        <span class="feature-text">AI Workflow</span>
-                    </div>
-                    <div class="divider-vertical"></div>
-                    <div class="feature-item">
-                        <div class="feature-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" opacity="0.7"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="10" y="3" width="5" height="5" rx="1"/><rect x="17" y="3" width="5" height="5" rx="1"/><rect x="3" y="10" width="5" height="5" rx="1"/><rect x="10" y="10" width="5" height="5" rx="1"/><rect x="17" y="10" width="5" height="5" rx="1"/><rect x="3" y="17" width="5" height="5" rx="1"/><rect x="10" y="17" width="5" height="5" rx="1"/><rect x="17" y="17" width="5" height="5" rx="1"/></svg></div>
-                        <span class="feature-text">Design · Prompt</span>
-                    </div>
-                    <div class="divider-vertical"></div>
-                    <div class="feature-item">
-                        <div class="feature-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg></div>
-                        <span class="feature-text">Code · Inspire</span>
-                    </div>
-                </div>
-                <div class="footer">Reusable Assets for Creative Minds</div>
-            </div>
+    <div class="glass">
+      <div class="pill"><span class="pill-dot"></span>EC LAB · ec 的实验室</div>
+      <div class="head">
+        <div>
+          <div class="title">Visual<em>Notes</em></div>
+          <div class="sub">Record. Explore. Share.</div>
         </div>
-
-        <!-- CARD 2: PURPLE -->
-        <div class="card-wrapper theme-purple">
-            <div class="glare"></div>
-            <div class="noise-overlay"></div>
-            <div class="dots-section">
-                <div class="dots-grid"></div>
-                <div class="dots-color-overlay"></div>
-                <div class="dots-blur-overlay"></div>
-            </div>
-            <div class="glass-card">
-                <div class="pill parallax-layer-1">
-                    <span class="pill-dot"></span><span class="pill-text">EC LAB 动效实验室</span>
-                </div>
-                <div class="header parallax-layer-2">
-                    <div>
-                        <h1 class="title">Motion<span class="title-serif">Studio</span></h1>
-                        <p class="subtitle">Easing. Physics. Joy.</p>
-                    </div>
-                    <div class="btn-circle">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" opacity="0.2"></polygon><polygon points="5 3 19 12 5 21 5 3"></polygon>
-                        </svg>
-                    </div>
-                </div>
-                <div class="divider-horizontal"></div>
-                <div class="features parallax-layer-1">
-                    <div class="feature-item">
-                        <div class="feature-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12c-2.66-2.66-5.33-4-8-4-2.67 0-5.34 1.34-8 4s-5.33 4-8 4"></path></svg></div>
-                        <span class="feature-text">Spring Physics</span>
-                    </div>
-                    <div class="divider-vertical"></div>
-                    <div class="feature-item">
-                        <div class="feature-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
-                        <span class="feature-text">Keyframes</span>
-                    </div>
-                    <div class="divider-vertical"></div>
-                    <div class="feature-item">
-                        <div class="feature-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-8"></path><path d="M15 15l-3-3-3 3"></path><rect x="4" y="4" width="16" height="16" rx="2"></rect></svg></div>
-                        <span class="feature-text">Gestures</span>
-                    </div>
-                </div>
-                <div class="footer">Interaction & Animation Patterns</div>
-            </div>
+        <div class="arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </div>
-
-        <!-- CARD 3: TEAL -->
-        <div class="card-wrapper theme-teal">
-            <div class="glare"></div>
-            <div class="noise-overlay"></div>
-            <div class="dots-section">
-                <div class="dots-grid"></div>
-                <div class="dots-color-overlay"></div>
-                <div class="dots-blur-overlay"></div>
-            </div>
-            <div class="glass-card">
-                <div class="pill parallax-layer-1">
-                    <span class="pill-dot"></span><span class="pill-text">EC LAB 数据实验室</span>
-                </div>
-                <div class="header parallax-layer-2">
-                    <div>
-                        <h1 class="title">Data<span class="title-serif">Insights</span></h1>
-                        <p class="subtitle">Metrics. Charts. Logic.</p>
-                    </div>
-                    <div class="btn-circle">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                    </div>
-                </div>
-                <div class="divider-horizontal"></div>
-                <div class="features parallax-layer-1">
-                    <div class="feature-item">
-                        <div class="feature-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div>
-                        <span class="feature-text">Trends</span>
-                    </div>
-                    <div class="divider-vertical"></div>
-                    <div class="feature-item">
-                        <div class="feature-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z" fill="currentColor" opacity="0.3"></path></svg></div>
-                        <span class="feature-text">Analysis</span>
-                    </div>
-                    <div class="divider-vertical"></div>
-                    <div class="feature-item">
-                        <div class="feature-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg></div>
-                        <span class="feature-text">Datasets</span>
-                    </div>
-                </div>
-                <div class="footer">Quantitative Interface Assets</div>
-            </div>
+      </div>
+      <div class="divider"></div>
+      <div class="features">
+        <div class="feat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4" fill="currentColor" opacity="0.3"/><circle cx="12" cy="12" r="9" stroke-dasharray="2 4"/></svg>
+          <span>AI Workflow</span>
         </div>
-
+        <div class="vd"></div>
+        <div class="feat">
+          <svg viewBox="0 0 24 24" fill="currentColor" opacity="0.8"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="10" y="3" width="5" height="5" rx="1"/><rect x="17" y="3" width="5" height="5" rx="1"/><rect x="3" y="10" width="5" height="5" rx="1"/><rect x="10" y="10" width="5" height="5" rx="1"/><rect x="17" y="10" width="5" height="5" rx="1"/><rect x="3" y="17" width="5" height="5" rx="1"/><rect x="10" y="17" width="5" height="5" rx="1"/><rect x="17" y="17" width="5" height="5" rx="1"/></svg>
+          <span>Design · Prompt</span>
+        </div>
+        <div class="vd"></div>
+        <div class="feat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Code · Inspire</span>
+        </div>
+      </div>
+      <div class="foot">Reusable Assets for Creative Minds</div>
     </div>
+  </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. Generate dot matrix
-            const grids = document.querySelectorAll('.dots-grid');
-            const cols = 23; const rows = 16;
-            const centerX = cols / 2; const centerY = rows; 
+  <!-- Card 2: Purple -->
+  <div class="card purple">
+    <div class="dots-wrap">
+      <div class="dots-grid" id="g2"></div>
+      <div class="dots-glow"></div>
+    </div>
+    <div class="glass">
+      <div class="pill"><span class="pill-dot"></span>EC LAB · 动效实验室</div>
+      <div class="head">
+        <div>
+          <div class="title">Motion<em>Studio</em></div>
+          <div class="sub">Easing. Physics. Joy.</div>
+        </div>
+        <div class="arrow">
+          <svg viewBox="0 0 24 24" fill="currentColor" opacity="0.85"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="features">
+        <div class="feat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12c-2.66-2.66-5.33-4-8-4-2.67 0-5.34 1.34-8 4s-5.33 4-8 4"/></svg>
+          <span>Spring Physics</span>
+        </div>
+        <div class="vd"></div>
+        <div class="feat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>Keyframes</span>
+        </div>
+        <div class="vd"></div>
+        <div class="feat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-8"/><path d="M15 15l-3-3-3 3"/><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+          <span>Gestures</span>
+        </div>
+      </div>
+      <div class="foot">Interaction & Animation Patterns</div>
+    </div>
+  </div>
 
-            grids.forEach(grid => {
-                for (let r = 0; r < rows; r++) {
-                    for (let c = 0; c < cols; c++) {
-                        const dot = document.createElement('div');
-                        dot.className = 'dot';
-                        const distance = Math.sqrt(Math.pow(c - centerX, 2) + Math.pow(r - centerY, 2));
-                        dot.style.animationDelay = `${distance * 0.12}s`;
-                        grid.appendChild(dot);
-                    }
-                }
-            });
+  <!-- Card 3: Teal -->
+  <div class="card teal">
+    <div class="dots-wrap">
+      <div class="dots-grid" id="g3"></div>
+      <div class="dots-glow"></div>
+    </div>
+    <div class="glass">
+      <div class="pill"><span class="pill-dot"></span>EC LAB · 数据实验室</div>
+      <div class="head">
+        <div>
+          <div class="title">Data<em>Insights</em></div>
+          <div class="sub">Metrics. Charts. Logic.</div>
+        </div>
+        <div class="arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="features">
+        <div class="feat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>Trends</span>
+        </div>
+        <div class="vd"></div>
+        <div class="feat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z" fill="currentColor" opacity="0.3"/></svg>
+          <span>Analysis</span>
+        </div>
+        <div class="vd"></div>
+        <div class="feat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          <span>Datasets</span>
+        </div>
+      </div>
+      <div class="foot">Quantitative Interface Assets</div>
+    </div>
+  </div>
 
-            // 2. Fluid Physics Engine for interactions
-            const cards = document.querySelectorAll('.card-wrapper');
+</div>
 
-            // State objects for each card for smooth interpolation (LERP)
-            const states = Array.from(cards).map(() => ({
-                current: { rotX: 0, rotY: 0, scale: 1, mX: 50, mY: 80, shine: 0, zOffset: 0 },
-                target:  { rotX: 0, rotY: 0, scale: 1, mX: 50, mY: 80, shine: 0, zOffset: 0 },
-                isHovered: false
-            }));
-
-            // Linear Interpolation function
-            const lerp = (start, end, factor) => start + (end - start) * factor;
-
-            cards.forEach((card, index) => {
-                const state = states[index];
-
-                card.addEventListener('mousemove', (e) => {
-                    const rect = card.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-
-                    const percentX = x / rect.width;
-                    const percentY = y / rect.height;
-
-                    state.isHovered = true;
-
-                    // Max rotation limits
-                    state.target.rotX = (0.5 - percentY) * 20; // 20deg max tilt
-                    state.target.rotY = (percentX - 0.5) * 20;
-
-                    // Target states
-                    state.target.scale = 1.05; // Pop out
-                    state.target.mX = percentX * 100; // Light tracks mouse
-                    state.target.mY = percentY * 100;
-                    state.target.shine = 1; // Show glare
-                    state.target.zOffset = 18; // Push internal layers out
-                });
-
-                card.addEventListener('mouseleave', () => {
-                    state.isHovered = false;
-                    // Reset to resting state
-                    state.target.rotX = 0;
-                    state.target.rotY = 0;
-                    state.target.scale = 1;
-                    state.target.mX = 50;
-                    state.target.mY = 80;
-                    state.target.shine = 0;
-                    state.target.zOffset = 0;
-                });
-            });
-
-            const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
-
-            // Render loop
-            function animate() {
-                cards.forEach((card, index) => {
-                    const state = states[index];
-                    const curr = state.current;
-                    const targ = state.target;
-
-                    // Apply LERP (0.1 represents the stiffness of the spring)
-                    curr.rotX = lerp(curr.rotX, targ.rotX, 0.1);
-                    curr.rotY = lerp(curr.rotY, targ.rotY, 0.1);
-                    curr.scale = lerp(curr.scale, targ.scale, 0.1);
-                    curr.mX = lerp(curr.mX, targ.mX, 0.15);
-                    curr.mY = lerp(curr.mY, targ.mY, 0.15);
-                    curr.shine = lerp(curr.shine, targ.shine, 0.1);
-                    curr.zOffset = lerp(curr.zOffset, targ.zOffset, 0.1);
-
-                    // Sync CSS Custom Properties for internal layers (all devices)
-                    card.style.setProperty('--mx', `${curr.mX}%`);
-                    card.style.setProperty('--my', `${curr.mY}%`);
-                    card.style.setProperty('--shine-opacity', curr.shine);
-                    card.style.setProperty('--z-offset', `${curr.zOffset}px`);
-
-                    // Skip 3D transform on touch devices to prevent layout squeeze
-                    if (isTouchDevice) return;
-
-                    // Optimization: only update DOM if values are changing significantly
-                    const isMoving = Math.abs(curr.rotX - targ.rotX) > 0.01 || Math.abs(curr.scale - targ.scale) > 0.001;
-
-                    if (isMoving || state.isHovered) {
-                        // Apply 3D Transform
-                        card.style.transform = `perspective(1000px) rotateX(${curr.rotX}deg) rotateY(${curr.rotY}deg) scale3d(${curr.scale}, ${curr.scale}, 1)`;
-
-                        // Deepen shadow dynamically based on scale/tilt
-                        const shadowY = 10 + (curr.scale - 1) * 200;
-                        const shadowBlur = 30 + (curr.scale - 1) * 400;
-                        const themeGlow = getComputedStyle(card).getPropertyValue('--theme-glow').trim();
-                        card.style.boxShadow = `0 0 0 1px rgba(255, 255, 255, 1) inset, 0 ${shadowY}px ${shadowBlur}px -10px rgba(0, 0, 0, 0.08), 0 ${shadowY * 2}px ${shadowBlur * 1.5}px -20px ${themeGlow}`;
-                    }
-                });
-
-                requestAnimationFrame(animate);
-            }
-
-            // Start loop after initial entrance animation finishes to prevent conflict
-            setTimeout(() => {
-                animate();
-            }, 1000);
-
-            // Add subtle parallax to ambient background based on global mouse position
-            const bg = document.querySelector('.ambient-bg');
-            document.addEventListener('mousemove', (e) => {
-                const x = (e.clientX / window.innerWidth - 0.5) * 40;
-                const y = (e.clientY / window.innerHeight - 0.5) * 40;
-                bg.style.transform = `translate(${x}px, ${y}px)`;
-            });
-        });
-    </script>
+<script>
+  // Generate dot grids with staggered animation delay for fluid feel
+  document.querySelectorAll('.dots-grid').forEach((grid, gridIdx) => {
+    const cols = 15, rows = 5;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        // Stagger by distance from center for wave effect
+        const dist = Math.hypot(c - cols / 2, r - rows);
+        dot.style.animationDelay = `${dist * 0.15 + gridIdx * 0.3}s`;
+        grid.appendChild(dot);
+      }
+    }
+  });
+</script>
 </body>
 </html>
