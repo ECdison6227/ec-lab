@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scroll Transition Animation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-color: #f5ece4; /* 开场页背景色 */
+            --mouth-color: #5c2b29; /* 嘴巴内部/主页背景色 */
+            --face-color: #eab896; /* 脸部颜色 */
+            --hair-color: #1a1a1a; /* 头发颜色 */
+            --scroll-progress: 0; /* 0 到 1 的滚动进度，现在是平滑的 */
+            /* 新增：鼠标/触摸的位置追踪变量，范围 -1 到 1 */
+            --mouse-x: 0;
+            --mouse-y: 0;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* 禁用原生滚动，我们自己控制 */
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+        }
+
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 开场页 (包含人脸) */
+        #opening-page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            /* 新增：为 3D 倾斜提供透视视角 */
+            perspective: 800px; 
+        }
+
+        .face-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            /* 修改：加入 3D 旋转。通过鼠标变量控制 X 轴和 Y 轴的旋转角度，脸部会“看向”鼠标 */
+            transform: rotateY(calc(var(--mouse-x) * 20deg)) rotateX(calc(var(--mouse-y) * -20deg));
+            /* 当进入主页时，脸部渐隐且恢复原位，防止遮挡 */
+            transition: opacity 0.3s ease, transform 0.1s ease-out;
+            transform-style: preserve-3d; /* 保持内部元素的 3D 层级 */
+        }
+
+        .face {
+            width: 100%;
+            height: 100%;
+            background-color: var(--face-color);
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset -10px -20px 30px rgba(0,0,0,0.1), 0 10px 20px rgba(0,0,0,0.05);
+            z-index: 1; /* 设定脸部的层级 */
+        }
+
+        .hair {
+            position: absolute;
+            top: 0;
+            left: -10%;
+            width: 120%;
+            height: 40%;
+            background-color: var(--hair-color);
+            border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+        }
+
+        /* 新增：添加可爱的眉毛 */
+        .eyebrows {
+            position: absolute;
+            top: 30%;
+            width: 100%;
+            display: flex;
+            justify-content: space-evenly;
+            padding: 0 35px;
+            box-sizing: border-box;
+            z-index: 15;
+            /* 微表情：嘴巴张开越大，眉毛挑得越高！ */
+            transform: translateY(calc(var(--scroll-progress) * -15px));
+        }
+
+        .eyebrow {
+            width: 24px;
+            height: 6px;
+            background-color: var(--hair-color);
+            border-radius: 10px;
+            /* 让眉毛有一点八字眉的无辜感 */
+            transform: rotate(-10deg); 
+        }
+        .eyebrows .eyebrow:nth-child(2) {
+            transform: rotate(10deg);
+        }
+
+        .eyes {
+            position: absolute;
+            top: 45%;
+            width: 100%;
+            display: flex;
+            justify-content: space-evenly;
+            padding: 0 40px;
+            box-sizing: border-box;
+            z-index: 15;
+            /* 眼神视差：眼睛比脸部移动得更多，产生景深感 */
+            transform: translate(calc(var(--mouse-x) * 12px), calc(var(--mouse-y) * 12px));
+        }
+
+        .eye {
+            width: 16px;
+            height: 16px;
+            background-color: #000;
+            border-radius: 50%;
+        }
+
+        /* 核心动画部分：嘴巴图层和细节改进版 */
+        .mouth-wrapper {
+            position: absolute;
+            /* 定位到脸的中心偏下位置作为缩放原点 */
+            top: 65%;
+            left: 50%;
+            /* 居中定位 */
+            transform: translate(-50%, -50%); 
+            /* 稍微加大基础大小，以便更清晰地绘制牙齿和舌头 */
+            width: 46px; 
+            height: 46px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* 极高层级：确保它在脸部上方，且不受脸部 overflow:hidden 的限制 */
+            z-index: 20; 
+        }
+
+        .mouth {
+            width: 100%;
+            height: 100%;
+            background-color: var(--mouth-color);
+            border-radius: 50%;
+            position: relative;
+            /* 裁剪掉超出嘴巴的牙齿和舌头部分 */
+            overflow: hidden; 
+            /* 添加内阴影，营造口腔深不见底的空间感 */
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.6); 
+            /* 初始为一个稍小的圆，最大放大到150倍足以覆盖整个屏幕 */
+            transform: scale(calc(0.25 + (150 * var(--scroll-progress))));
+            transform-origin: center center;
+        }
+
+        /* 新增：可爱的上排牙齿 */
+        .teeth {
+            position: absolute;
+            top: -2%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50%;
+            height: 25%;
+            background-color: #ffffff;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+        }
+
+        /* 优化：立体质感的舌头 */
+        .tongue {
+            position: absolute;
+            bottom: -5%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 65%;
+            height: 50%;
+            background-color: #ff6b81; /* 更生动的粉红色 */
+            border-radius: 20px 20px 0 0;
+            box-shadow: inset 0 -3px 8px rgba(0,0,0,0.2); /* 舌头本身的立体阴影 */
+        }
+
+        .scroll-hint {
+            position: absolute;
+            bottom: 10%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #666;
+            font-size: 0.9rem;
+            animation: bounce 2s infinite;
+            opacity: calc(1 - var(--scroll-progress) * 5); /* 滚动一点就消失 */
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .scroll-icon {
+            width: 24px;
+            height: 36px;
+            border: 2px solid #666;
+            border-radius: 12px;
+            margin-top: 8px;
+            position: relative;
+        }
+        .scroll-icon::before {
+            content: '';
+            position: absolute;
+            top: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 8px;
+            background-color: #666;
+            border-radius: 2px;
+        }
+
+        /* 主页 (WELCOME) */
+        #homepage {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--mouth-color);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            /* 只有当滚动进度 >= 1 时才显示，且在最上层 */
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 30;
+        }
+
+        #homepage.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* 隐藏掉人脸部分，当完全进入主页时 */
+        #opening-page.hidden-content .face-container {
+            opacity: 0;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="container">
+    
+    <!-- 开场页 -->
+    <div id="opening-page">
+        <div class="face-container">
+            <div class="face">
+                <div class="hair"></div>
+                <!-- 新增：眉毛结构 -->
+                <div class="eyebrows">
+                    <div class="eyebrow"></div>
+                    <div class="eyebrow"></div>
+                </div>
+                <div class="eyes">
+                    <div class="eye"></div>
+                    <div class="eye"></div>
+                </div>
+                <!-- 关键修复：把嘴巴移出了 face 容器内部 -->
+            </div>
+
+            <!-- 将嘴巴与 face 放在同级，并通过绝对定位覆盖在脸上。-->
+            <!-- 这样不仅保留了相对于人脸的精确定位，嘴巴放大时更能直接突破脸的边界覆盖全屏！ -->
+            <div class="mouth-wrapper">
+                <div class="mouth">
+                    <!-- 增加了牙齿和舌头细节 -->
+                    <div class="teeth"></div>
+                    <div class="tongue"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="scroll-hint">
+            <span>Scroll Up</span>
+            <div class="scroll-icon"></div>
+        </div>
+    </div>
+
+    <!-- 主页 -->
+    <div id="homepage">
+        <h1 class="text-5xl font-bold tracking-widest mb-8">WELCOME</h1>
+        <button class="px-6 py-2 border border-white rounded-full hover:bg-white hover:text-[#5c2b29] transition-colors duration-300">
+            ENTER HOME
+        </button>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const root = document.documentElement;
+        const homepage = document.getElementById('homepage');
+        const openingPage = document.getElementById('opening-page');
+        
+        // 目标进度：由用户的实际滚动决定
+        let targetProgress = 0;
+        // 当前显示进度：会平滑地追赶 targetProgress
+        let currentProgress = 0;
+
+        /* 新增：鼠标追踪相关的变量 */
+        let mouseTargetX = 0;
+        let mouseTargetY = 0;
+        let mouseCurrentX = 0;
+        let mouseCurrentY = 0;
+        
+        // 配置参数
+        const scrollSensitivity = 0.003; 
+        const touchSensitivity = 0.006;  
+        const maxProgress = 1;
+        const minProgress = 0;
+        const lerpFactor = 0.08; // 缓动系数，值越小越丝滑（但越慢），值越大越接近瞬间变化
+        const mouseLerpFactor = 0.1; // 鼠标跟随的丝滑程度
+
+        // 更新目标进度
+        function updateTargetProgress(delta) {
+            if (homepage.classList.contains('active') && delta > 0) {
+                return;
+            }
+            targetProgress += delta;
+            if (targetProgress < minProgress) targetProgress = minProgress;
+            if (targetProgress > maxProgress) targetProgress = maxProgress;
+        }
+
+        // 动画循环：平滑过渡的核心
+        function animate() {
+            // Lerp (线性插值) 算法：当前值 = 当前值 + (目标值 - 当前值) * 缓动系数
+            currentProgress += (targetProgress - currentProgress) * lerpFactor;
+
+            // 避免无限接近，设定一个极小值阈值就直接等于目标值
+            if (Math.abs(targetProgress - currentProgress) < 0.001) {
+                currentProgress = targetProgress;
+            }
+
+            /* 新增：鼠标追踪的平滑插值 (Lerping) */
+            mouseCurrentX += (mouseTargetX - mouseCurrentX) * mouseLerpFactor;
+            mouseCurrentY += (mouseTargetY - mouseCurrentY) * mouseLerpFactor;
+
+            // 更新 CSS 变量
+            root.style.setProperty('--scroll-progress', currentProgress);
+            root.style.setProperty('--mouse-x', mouseCurrentX);
+            root.style.setProperty('--mouse-y', mouseCurrentY);
+
+            checkState(currentProgress);
+
+            // 持续循环
+            requestAnimationFrame(animate);
+        }
+
+        // 开始动画循环
+        animate();
+
+        function checkState(progress) {
+            // 当实际进度非常接近 1 时，判定为到达主页
+            if (progress >= 0.99) {
+                if (!homepage.classList.contains('active')) {
+                    homepage.classList.add('active');
+                    openingPage.classList.add('hidden-content');
+                }
+            } else {
+                if (homepage.classList.contains('active')) {
+                    homepage.classList.remove('active');
+                    openingPage.classList.remove('hidden-content');
+                }
+            }
+        }
+
+        /* 新增：监听鼠标移动 (PC端互动) */
+        window.addEventListener('mousemove', (e) => {
+            // 将屏幕坐标转换为 -1 到 1 的比例值
+            mouseTargetX = (e.clientX / window.innerWidth - 0.5) * 2;
+            mouseTargetY = (e.clientY / window.innerHeight - 0.5) * 2;
+        });
+
+        // 监听鼠标滚轮 (PC端)
+        window.addEventListener('wheel', (e) => {
+            const delta = e.deltaY * scrollSensitivity;
+            updateTargetProgress(delta);
+        }, { passive: false });
+
+        // 监听触摸滑动 (移动端)
+        let touchStartY = 0;
+        window.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            
+            /* 新增：移动端点击屏幕也能触发眼神追踪 */
+            mouseTargetX = (e.touches[0].clientX / window.innerWidth - 0.5) * 2;
+            mouseTargetY = (e.touches[0].clientY / window.innerHeight - 0.5) * 2;
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+            const touchCurrentY = e.touches[0].clientY;
+            const delta = (touchStartY - touchCurrentY) * touchSensitivity;
+            
+            updateTargetProgress(delta);
+            touchStartY = touchCurrentY;
+            e.preventDefault(); 
+        }, { passive: false });
+
+        // 吸附效果也针对 targetProgress 进行操作
+        let snapTimeout;
+        const handleScrollEnd = () => {
+            clearTimeout(snapTimeout);
+            snapTimeout = setTimeout(() => {
+                if (targetProgress > 0 && targetProgress < 1) {
+                    targetProgress = targetProgress > 0.5 ? 1 : 0;
+                    // 不需要再手动做 requestAnimationFrame 动画了，
+                    // 因为我们全局的 animate() 循环会自动平滑追赶 targetProgress
+                }
+            }, 150); 
+        };
+
+        window.addEventListener('wheel', handleScrollEnd);
+        window.addEventListener('touchend', handleScrollEnd);
+    });
+</script>
+</body>
+</html>

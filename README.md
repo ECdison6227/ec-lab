@@ -48,6 +48,7 @@ project-name/
 | 06 | Pixel Icon Library | 像素图标、即时搜索、网格瀑布 |
 | 07 | Fluid Interactive Cards | 液态渐变、流体变形、动态光晕 |
 | 08 | Visual Notes Magnifier | 放大渐变、悬浮面板、光影映射 |
+| 09 | Code-G Artifact | 滚动转场、面孔入口、3D 视差 |
 | 09 | Craft Family Design System | 玻璃拟态、氛围光、Dock 导航 |
 
 ---

@@ -1,0 +1,27 @@
+{
+  "id": "code-g-artifact",
+  "title": "Code-G Artifact",
+  "html_prompt": "Create a responsive single-file HTML/CSS/JS preview for an EC LAB scroll-driven transition experience. Start with a warm beige full-screen stage featuring a stylized human face (hair, eyebrows, eyes, and a mouth). The face subtly tilts and looks toward the mouse/touch position using CSS variables and 3D transforms. As the user scrolls (or swipes), the mouth scales up from a small circle to a large portal that fills the entire screen, revealing a deep burgundy homepage underneath. Add cute details like upper teeth and a tongue inside the mouth, an animated 'Scroll Up' hint that fades out, and a final WELCOME page with an ENTER HOME button. Use smooth lerp-based animation via requestAnimationFrame, wheel/touch event listeners, and a snap behavior that settles to either 0 or 1. Build everything with HTML, CSS, inline SVG if needed, gradients, shadows, transforms, and Tailwind CDN utility classes. Preserve the playful, organic feel and the dramatic portal reveal. Use EC LAB / ec 的实验室 identity where appropriate.",
+  "css": {
+    "--primary": "#5c2b29",
+    "--background": "#f5ece4",
+    "--surface": "#eab896",
+    "--text": "#ffffff",
+    "--muted": "#666666",
+    "--accent": "#ff6b81",
+    "--radius-none": "0px",
+    "--radius-sm": "6px",
+    "--radius-md": "16px",
+    "--radius-lg": "28px",
+    "--blur": "0px",
+    "--shadow": "inset 0 5px 15px rgba(0,0,0,0.6), 0 10px 20px rgba(0,0,0,0.05)",
+    "--grain": "none",
+    "--font-sans": "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+    "--font-serif": "Georgia, \"Times New Roman\", Times, serif",
+    "--font-mono": "\"SFMono-Regular\", Consolas, \"Liberation Mono\", Menlo, monospace",
+    "--font-cn": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", system-ui, sans-serif"
+  },
+  "files": {
+    "preview": "preview.html"
+  }
+}
