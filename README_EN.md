@@ -2,39 +2,48 @@
 
 ---
 
-# EC LAB — My Personal UI Design Portfolio
+<p align="center">
+  <img src="./assets/readme/hero.svg" width="100%" alt="EC LAB — Personal UI Design Laboratory">
+</p>
 
-Hey, welcome to my little design corner 👋
-
-This is where I keep all the UI experiments I find interesting — glassmorphism, liquid animations, pixel art, magnifier light effects, you name it. Whenever a design idea makes me go *"oh, this is cool"*, I build a static demo of it and drop it here. Every project lives in a single HTML file — no frameworks, no CDN, no build step. **Open it, read the code, copy what you like.**
-
-> 💡 If you also like to tinker with UI, feel free to browse. Found something you like? Just fork or copy it.
-> 🎨 Live preview: [**ec.edsionc.top**](https://ec.edsionc.top)
-> ⭐ Drop a star if you enjoy the work
+<p align="center">
+  <a href="https://ec.edsionc.top" target="_blank"><strong>ec.edsionc.top</strong></a> · Single-file HTML/CSS/JS experiments · Open and remix
+</p>
 
 ---
 
-## How to use the code here
+## What this is
+
+**EC LAB** is my personal UI design laboratory. Glassmorphism, liquid motion, pixel art, flip cards, face portals — whenever a design idea makes me think *"this is cool"*, I build a static demo and drop it here.
+
+Every project is a **single HTML file**: no frameworks, no CDN, no build step. Open it, read the code, copy what you like.
+
+<p align="center">
+  <img src="./assets/readme/showcase.png" width="100%" alt="EC LAB showcase wall: previews of 8 single-file frontend experiments">
+</p>
+
+## How to use
 
 Each project folder has just three files:
 
 ```
 project-name/
 ├── preview.html   ← Complete HTML/CSS/JS with styles and interactions
-├── meta.json      ← Prompt and design token metadata
-└── README.md      ← Design notes (optional)
+├── meta.json      ← Prompt and design-token metadata
+└── README.md      ← Design notes
 ```
 
-**Just use it:**
-1. Open `preview.html` and pick the part you like
-2. Copy & paste it into your own project
-3. Want to recolor it? Search for `var(--xxx)` in the CSS and change a few variables
+**Use it directly:**
 
-**Use it as a reference:**
-- **Prompts**: Every `meta.json` `prompt` field is ready to feed to GPT / Claude / Cursor — the AI will generate new pages in the same style for you
-- **CSS Tokens**: Colors, fonts, spacing, radii, shadows — all named and ready to copy
+1. Open `preview.html`
+2. Pick the snippet you like
+3. Copy and paste it into your own project
+4. Change the CSS variables (`var(--xxx)`) to recolor
 
----
+**Use it as an AI reference:**
+
+- The `prompt` / `html_prompt` field in `meta.json` can be fed directly to GPT / Claude / Cursor to generate new pages in the same style
+- The `css` tokens (colors, fonts, radii, shadows) are ready to reuse
 
 ## Projects
 
@@ -42,43 +51,37 @@ project-name/
 |---|---------|----------------|
 | 01 | EC Global Payments Hero | Dark glassmorphism, 3D sphere, gold particles |
 | 02 | Ostraka UI Cards | Paper texture, monospace, retro terminal |
-| 03 | EC LAB Charging Progress | Liquid progress, glassmorphism, Bezier curves |
+| 03 | EC LAB Charging Progress | Liquid progress, glassmorphism, Bézier curves |
 | 04 | EC Blue Glass Triptych | Blue glass, triptych parallax, diffused glow |
 | 05 | EC Flip Word Notes | Flip cards, split notes, elastic transitions |
 | 06 | Pixel Icon Library | Pixel icons, instant search, masonry grid |
 | 07 | Fluid Interactive Cards | Fluid gradient, morphing blobs, dynamic glow |
 | 08 | Visual Notes Magnifier | Magnifier gradient, floating panels, light mapping |
 | 09 | Craft Family Design System | Glassmorphism, ambient light, Dock navigation |
-
----
+| 10 | Code-G Artifact | Scroll transition, face portal, 3D parallax |
 
 ## Local preview
 
 ```bash
-# Option 1: Python (easiest)
+# Option 1: Python (recommended)
 python3 -m http.server 4173
 
-# Option 2: Just open it
-# Double-click index.html (some project prompts may not load fully)
+# Option 2: Open index.html directly
+# Some projects may not load meta.json fully over file://
 ```
 
-Then open `http://localhost:4173/index.html`.
-
----
+Then visit `http://localhost:4173/index.html`.
 
 ## Tech notes
 
-- **Zero dependencies**: no CDN, no frameworks, no build tools — just vanilla browser
+- **Zero dependencies**: no CDN, no frameworks, no build tools — just vanilla browser APIs
 - **Pure static**: deploy anywhere — GitHub Pages, Cloudflare Pages, Netlify, Vercel, or any static host
-- **Hackable**: CSS variables are centralized in `:root` — change one value, the whole theme updates
+- **Hackable**: CSS variables are centralized in `:root` — change one value, update the whole theme
 - **Responsive**: every project works on desktop and mobile
 
 ---
 
-## If you like what you see
+<p align="center">
+  ⭐ Star the repo · 🔁 Fork and remix
+</p>
 
-- ⭐ Star the repo
-- 🔁 Fork it and remix
-- 🐦 Send me screenshots of your own work — happy to chat design anytime
-
-— Let's make UI a little more fun.
