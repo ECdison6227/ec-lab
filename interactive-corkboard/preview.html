@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Corkboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter for UI, Caveat & Architects Daughter for handwriting vibes, Fira Code for code blocks -->
+    <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;700&family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&family=Playpen+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --board-bg: #d1a17b;
+            --item-shadow: 0 10px 20px -5px rgba(0,0,0,0.18), 0 6px 8px -6px rgba(0,0,0,0.18);
+            --item-shadow-active: 0 20px 35px -5px rgba(0,0,0,0.25), 0 15px 15px -10px rgba(0,0,0,0.2);
+            --pin-shadow: 0 3px 5px rgba(0,0,0,0.3);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1e1e1e;
+            overflow: hidden;
+            user-select: none;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Responsive fonts & handwriting rules */
+        .font-handwritten {
+            font-family: 'Caveat', cursive;
+        }
+        .font-marker {
+            font-family: 'Architects Daughter', cursive;
+        }
+        .font-code {
+            font-family: 'Fira Code', monospace;
+        }
+
+        #board-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            background-color: #2b1d14;
+        }
+
+        /* High quality vector cork texture background */
+        .corkboard {
+            width: 5000px;
+            height: 4000px;
+            background-color: #cda27b;
+            background-image: 
+                radial-gradient(circle, rgba(0,0,0,0.1) 1.2px, transparent 1.2px),
+                radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
+            background-size: 6px 6px, 14px 14px;
+            background-position: 0 0, 3px 4px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: 0 0;
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.5);
+        }
+
+        /* Wood Frame Overlay to represent real board border */
+        .wood-frame {
+            position: absolute;
+            inset: 0;
+            border: 18px solid #5a3c26;
+            border-image: linear-gradient(to right, #4a2f1b, #6b472e, #4a2f1b) 20;
+            pointer-events: none;
+            z-index: 40;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.6);
+        }
+
+        /* SVG Connections Layer */
+        #connections-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .board-item {
+            position: absolute;
+            cursor: grab;
+            transition: box-shadow 0.2s ease, transform 0.1s ease;
+            box-shadow: var(--item-shadow);
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
+        }
+        .board-item:active {
+            cursor: grabbing;
+            box-shadow: var(--item-shadow-active);
+        }
+
+        /* Authentic Note Styles from the original image_27df3c.jpg */
+        .paper-note {
+            background-color: #fcf9f2;
+            border-radius: 2px;
+            border-bottom: 2px solid rgba(0,0,0,0.08);
+            border-right: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .paper-yellow {
+            background-color: #fcf0a3;
+            border-radius: 1px;
+            border-bottom: 2px solid rgba(0,0,0,0.08);
+        }
+
+        .paper-green {
+            background-color: #cedcb3;
+            border-radius: 1px;
+        }
+
+        .paper-blue {
+            background-color: #b2cfd8;
+            border-radius: 1px;
+        }
+
+        /* Ripped Edge notebook styling */
+        .ripped-edge-left {
+            border-left: 6px dotted #cda27b;
+            background-image: linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px);
+            background-size: 100% 24px;
+        }
+
+        /* Polaroid Photo design */
+        .polaroid {
+            background: #ffffff;
+            padding: 10px;
+            padding-bottom: 22px;
+            box-shadow: var(--item-shadow);
+            border-radius: 1px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .polaroid-img {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1/1;
+            object-fit: cover;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        /* Real 3D pushpins and tacks */
+        .pin {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            z-index: 10;
+            box-shadow: var(--pin-shadow);
+        }
+        .pin::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 6px;
+            height: 6.5px;
+            background: rgba(255,255,255,0.4);
+            border-radius: 50%;
+        }
+        .pin.red { background: radial-gradient(circle at 35% 35%, #ff5c5c, #9a0000); }
+        .pin.white { background: radial-gradient(circle at 35% 35%, #ffffff, #aaaaaa); }
+        .pin.wood { background: radial-gradient(circle at 35% 35%, #dcb38c, #6b472e); }
+        .pin.metal {
+            background: radial-gradient(circle at 35% 35%, #e2e8f0, #4a5568);
+            border-radius: 3px;
+            width: 18px;
+            height: 10px;
+        }
+
+        /* ID Badge Lanyard clips */
+        .badge-case {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(4px);
+            border: 1.5px solid rgba(255,255,255,0.7);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .badge-inner {
+            background: #fdfbf7;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 4px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .clip {
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 32px;
+            height: 24px;
+            background: linear-gradient(180deg, #94a3b8, #475569);
+            border-radius: 4px 4px 1px 1px;
+            box-shadow: var(--pin-shadow);
+            z-index: 10;
+        }
+        .clip::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            right: 4px;
+            height: 3px;
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Realistic Tapes (Translucent Washi Tape) */
+        .tape {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70px;
+            height: 18px;
+            background: rgba(240, 225, 195, 0.4);
+            backdrop-filter: blur(1px);
+            border-left: 2px dashed rgba(0,0,0,0.06);
+            border-right: 2px dashed rgba(0,0,0,0.06);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+        .tape.angled {
+            transform: translateX(-50%) rotate(-4deg);
+        }
+
+        /* String connection node styling */
+        .connect-point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: radial-gradient(circle, #e2e8f0 30%, #475569 90%);
+            border: 2.5px solid #1e293b;
+            border-radius: 50%;
+            cursor: crosshair;
+            z-index: 20;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+            transition: transform 0.2s;
+        }
+        .connect-point:hover {
+            transform: scale(1.4);
+            background: #f43f5e;
+        }
+        
+        /* Positioning standard connect points */
+        .connect-point.top { top: -6px; left: 50%; transform: translateX(-50%); }
+        .connect-point.bottom { bottom: -6px; left: 50%; transform: translateX(-50%); }
+        .connect-point.left { left: -6px; top: 50%; transform: translateY(-50%); }
+        .connect-point.right { right: -6px; top: 50%; transform: translateY(-50%); }
+
+        /* Highlight editable areas when editing a note */
+        .board-item.editing-mode .editable-text {
+            outline: 1.5px dashed rgba(108, 124, 89, 0.4) !important;
+            background-color: rgba(108, 124, 89, 0.05);
+            border-radius: 3px;
+            transition: background-color 0.15s ease;
+        }
+        .board-item.editing-mode .editable-text:focus {
+            outline: 2px solid rgba(108, 124, 89, 0.8) !important;
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 0 3px rgba(108, 124, 89, 0.15);
+        }
+
+        /* Dark mode styling exception for editing */
+        .board-item.dark-note.editing-mode .editable-text {
+            outline: 1.5px dashed rgba(255, 255, 255, 0.3) !important;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        .board-item.dark-note.editing-mode .editable-text:focus {
+            outline: 2px solid rgba(255, 255, 255, 0.6) !important;
+            background-color: rgba(30, 30, 30, 0.95);
+        }
+
+        /* Premium Floating Glass Panel Style */
+        .glass-panel {
+            background: rgba(253, 251, 247, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Checkbox styling */
+        input[type="checkbox"] {
+            cursor: pointer;
+            width: 14px;
+            height: 14px;
+            accent-color: #6c7c59;
+        }
+    </style>
+</head>
+<body class="text-gray-800 text-sm">
+
+    <!-- Viewport Container -->
+    <main id="board-container">
+        
+        <!-- Corkboard Workspace -->
+        <div id="workspace" class="corkboard">
+            
+            <!-- Beautiful Wood Frame representation around corkboard edges -->
+            <div class="wood-frame"></div>
+
+            <!-- SVG layer for cords/connections -->
+            <svg id="connections-layer"></svg>
+
+            <!-- ==========================================
+                 ORIGINAL CORE ELEMENTS (1:1 from image_27df3c.jpg)
+                 ========================================== -->
+
+            <!-- Item 1: IDEAS BEGIN HERE -->
+            <div class="board-item paper-note p-6 w-60 h-60 transform -rotate-1" style="left: 200px; top: 150px;">
+                <div class="pin metal"></div>
+                <div class="connect-point bottom" data-id="item1_out"></div>
+                
+                <h2 class="font-sans text-xl font-bold tracking-widest text-gray-700 mt-2 mb-3 editable-text" contenteditable="true">IDEAS BEGIN HERE</h2>
+                <p class="font-handwritten text-lg leading-tight text-gray-500 mb-2 editable-text" contenteditable="true">Capture your thoughts and bring them to life.</p>
+                <!-- SVG botanical line art -->
+                <div class="absolute bottom-4 right-4 text-[#6c7c59] opacity-80 pointer-events-none">
+                    <svg class="w-12 h-16" viewBox="0 0 100 120" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M50 110 Q52 70 30 30 M50 80 Q65 60 75 40 M46 65 Q25 55 15 45 M52 45 Q70 30 75 15" stroke-linecap="round"/>
+                        <path d="M30 30 Q15 20 20 10 Q35 15 30 30 Z M75 40 Q85 30 80 20 Q70 25 75 40 Z M15 45 Q5 40 10 30 Q22 35 15 45 Z" fill="currentColor" fill-opacity="0.15"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Item 2: Daily Reminder -->
+            <div class="board-item paper-green p-5 w-44 h-44 transform rotate-3" style="left: 550px; top: 180px;">
+                <div class="pin white"></div>
+                <h3 class="font-handwritten text-lg font-bold border-b border-gray-400 pb-1 text-emerald-900 editable-text" contenteditable="true">Daily Reminder</h3>
+                <ul class="font-handwritten text-md space-y-2 mt-3 text-emerald-800 list-disc list-inside leading-none editable-text" contenteditable="true">
+                    <li>Focus</li>
+                    <li>Create</li>
+                    <li>Inspire</li>
+                </ul>
+            </div>
+
+            <!-- Item 3: TODAY'S FOCUS (Torn-edge note) -->
+            <div class="board-item paper-note ripped-edge-left p-6 w-60 h-72 transform -rotate-1" style="left: 820px; top: 160px;">
+                <div class="pin wood"></div>
+                <div class="connect-point left" data-id="item3_out"></div>
+                
+                <h3 class="font-sans text-xs tracking-widest text-gray-400 font-bold mb-4 editable-text" contenteditable="true">TODAY'S FOCUS</h3>
+                <div class="space-y-3 font-handwritten text-lg">
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" checked>
+                        <span class="line-through text-gray-400">Concept Design</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" checked>
+                        <span class="line-through text-gray-400">Client Feedback</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox">
+                        <span class="text-gray-700">Revisions</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox">
+                        <span class="text-gray-700">Finalize Mockups</span>
+                    </label>
+                </div>
+                <!-- Mini star sketch -->
+                <svg class="absolute bottom-4 right-4 w-6 h-6 text-yellow-600 opacity-60" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.907c.961 0 1.36 1.24.588 1.81l-3.97 2.883a1 1 0 00-.364 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.971-2.883a1 1 0 00-1.175 0l-3.97 2.883c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.364-1.118L2.98 10.1c-.773-.57-.375-1.81.587-1.81H8.47a1 1 0 00.95-.69l1.519-4.674z"/>
+                </svg>
+            </div>
+
+            <!-- Item 4: Simplicity Polaroid -->
+            <div class="board-item polaroid w-56 transform rotate-2" style="left: 620px; top: 520px;">
+                <div class="pin white"></div>
+                <div class="connect-point top" data-id="item4_in"></div>
+                <!-- Polaroid styled placeholder image of vases -->
+                <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=400&q=80" onerror="this.src='https://placehold.co/400x400/e8e6e1/444444?text=Simplicity'" alt="Vase art" class="polaroid-img">
+                <p class="font-handwritten text-center text-lg mt-3 text-gray-600 editable-text" contenteditable="true">Simplicity is beauty.</p>
+            </div>
+
+            <!-- Item 5: Light Photo Polaroid -->
+            <div class="board-item polaroid w-52 transform -rotate-1" style="left: 1250px; top: 130px;">
+                <div class="pin white"></div>
+                <img src="https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=400&q=80" onerror="this.src='https://placehold.co/400x400/ece8e2/444444?text=Light'" alt="Architecture" class="polaroid-img">
+                <p class="font-handwritten text-center text-md mt-3 text-gray-500 editable-text" contenteditable="true">Light. Material. Life.</p>
+            </div>
+
+            <!-- Item 6: PROJECT PLAN -->
+            <div class="board-item paper-note p-6 w-60 h-64 transform rotate-1" style="left: 1210px; top: 510px;">
+                <div class="pin green" style="background: radial-gradient(circle at 35% 35%, #556b2f, #223311);"></div>
+                <div class="connect-point left" data-id="item6_in"></div>
+                
+                <h3 class="font-marker text-lg text-emerald-800 border-b border-dashed border-gray-300 pb-1 mb-3 editable-text" contenteditable="true">PROJECT PLAN</h3>
+                <div class="space-y-2 font-handwritten text-md">
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" checked>
+                        <span class="line-through text-gray-400">Research</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" checked>
+                        <span class="line-through text-gray-400">Moodboard</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" checked>
+                        <span class="line-through text-gray-400">Wireframes</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox">
+                        <span class="text-gray-700">Prototype</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox">
+                        <span class="text-gray-700">User Testing</span>
+                    </label>
+                </div>
+                <!-- Q2 Goals handdrawn stamp -->
+                <div class="absolute bottom-4 right-4 border border-red-400 text-red-500 text-[10px] font-bold px-2 py-1 rounded-full transform rotate-12 uppercase tracking-wide editable-text" contenteditable="true">Q2 Goals!</div>
+            </div>
+
+            <!-- Item 7: Yellow Post-it (Eames) -->
+            <div class="board-item paper-yellow p-5 w-52 h-48 transform -rotate-2" style="left: 1650px; top: 560px;">
+                <div class="pin wood"></div>
+                <div class="connect-point left" data-id="item7_in"></div>
+                
+                <blockquote class="font-handwritten text-lg leading-tight text-[#5a4a26] mt-1">
+                    <p class="editable-text" contenteditable="true">"The details are not the details. They make the design."</p>
+                    <cite class="block text-right text-sm font-semibold mt-4 text-[#8a7238] editable-text" contenteditable="true">— Charles Eames</cite>
+                </blockquote>
+            </div>
+
+            <!-- Item 8: Project Manager ID Badge (Jason Wang) -->
+            <div class="board-item badge-case w-48 h-72 transform -rotate-1" style="left: 280px; top: 530px;">
+                <div class="clip"></div>
+                <div class="connect-point top" data-id="badge1_out"></div>
+                <div class="connect-point right" data-id="badge1_in"></div>
+                
+                <div class="badge-inner">
+                    <div class="h-6 w-full bg-[#3d4d38] flex items-center justify-center">
+                        <span class="text-[8px] tracking-widest text-white/80 font-bold">CREATIVE STUDIO</span>
+                    </div>
+                    <div class="flex-grow flex flex-col items-center justify-center p-4">
+                        <!-- Avatar Silhouette SVG -->
+                        <div class="w-16 h-16 rounded-full bg-[#f1f5f1] border border-gray-200 flex items-center justify-center mb-3">
+                            <svg class="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        </div>
+                        <span class="text-[8px] font-bold text-gray-400 tracking-widest editable-text" contenteditable="true">PROJECT MANAGER</span>
+                        <h4 class="text-md font-bold tracking-wider text-[#3d4d38] mb-2 editable-text" contenteditable="true">JASON WANG</h4>
+                        <div class="text-[9px] font-mono text-gray-500 leading-tight">
+                            <p class="editable-text" contenteditable="true">ID: 6402 7781</p>
+                            <p class="editable-text" contenteditable="true">Access Level 3</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item 9: Design Lead ID Badge (Linda Zhou) -->
+            <div class="board-item badge-case w-48 h-72 transform rotate-2" style="left: 1720px; top: 100px;">
+                <div class="clip"></div>
+                <div class="connect-point top" data-id="badge2_out"></div>
+                <div class="connect-point left" data-id="badge2_in"></div>
+                
+                <div class="badge-inner">
+                    <div class="h-6 w-full bg-[#4a5a45] flex items-center justify-center">
+                        <span class="text-[8px] tracking-widest text-white/80 font-bold">CREATIVE STUDIO</span>
+                    </div>
+                    <div class="flex-grow flex flex-col items-center justify-center p-4">
+                        <div class="w-16 h-16 rounded-full bg-[#f1f5f1] border border-gray-200 flex items-center justify-center mb-3">
+                            <svg class="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        </div>
+                        <span class="text-[8px] font-bold text-gray-400 tracking-widest editable-text" contenteditable="true">DESIGN LEAD</span>
+                        <h4 class="text-md font-bold tracking-wider text-[#4a5a45] mb-2 editable-text" contenteditable="true">LINDA ZHOU</h4>
+                        <div class="text-[9px] font-mono text-gray-500 leading-tight">
+                            <p class="editable-text" contenteditable="true">ID: 8703 1592</p>
+                            <p class="editable-text" contenteditable="true">Access Level 2</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item 10: Concept Sketch Grid -->
+            <div class="board-item bg-[#f4ebd0] p-5 w-60 h-64 transform rotate-1" style="left: 180px; top: 960px; background-image: radial-gradient(#d5cbb1 1.2px, transparent 1.2px); background-size: 15px 15px;">
+                <div class="tape angled" style="top: -24px;"></div>
+                <div class="connect-point right" data-id="item10_out"></div>
+                
+                <!-- Hand sketch architecture drawing -->
+                <svg class="w-full h-36 border border-[#cfc4a6]/60 bg-white/40 p-2 mt-2 text-[#4a3f2d] opacity-80" viewBox="0 0 120 80" fill="none" stroke="currentColor" stroke-width="1.2">
+                    <rect x="10" y="30" width="100" height="40"/>
+                    <line x1="10" y1="30" x2="60" y2="10"/>
+                    <line x1="110" y1="30" x2="60" y2="10"/>
+                    <!-- Columns & perspective lines -->
+                    <line x1="25" y1="30" x2="25" y2="70"/>
+                    <line x1="50" y1="30" x2="50" y2="70"/>
+                    <line x1="70" y1="30" x2="70" y2="70"/>
+                    <line x1="95" y1="30" x2="95" y2="70"/>
+                    <line x1="15" y1="45" x2="105" y2="45"/>
+                </svg>
+                <p class="font-handwritten text-center text-lg mt-4 text-[#5c4a30] editable-text" contenteditable="true">Concept Sketch</p>
+            </div>
+
+            <!-- Item 11: Blue Post-it -->
+            <div class="board-item paper-blue p-5 w-44 h-40 transform -rotate-3" style="left: 530px; top: 970px;">
+                <div class="pin white"></div>
+                <div class="connect-point top" data-id="item11_in"></div>
+                
+                <p class="font-handwritten text-xl leading-snug text-blue-950 mt-2 editable-text" contenteditable="true">Meeting with client @ 2:00 PM</p>
+            </div>
+
+            <!-- Item 12: MOODBOARD Swatches -->
+            <div class="board-item paper-note p-5 w-60 h-48 transform -rotate-1" style="left: 880px; top: 900px;">
+                <div class="pin wood"></div>
+                <div class="connect-point top" data-id="item12_in"></div>
+                
+                <h3 class="font-sans text-xs tracking-widest text-gray-400 font-bold mb-4 text-center editable-text" contenteditable="true">MOODBOARD</h3>
+                <!-- Palette circles -->
+                <div class="flex justify-center space-x-3 mb-4">
+                    <span class="w-10 h-10 rounded-full bg-[#4a5a45] block border border-gray-200"></span>
+                    <span class="w-10 h-10 rounded-full bg-[#dac39a] block border border-gray-200"></span>
+                    <span class="w-10 h-10 rounded-full bg-[#8fa9bf] block border border-gray-200"></span>
+                    <span class="w-10 h-10 rounded-full bg-[#2a3848] block border border-gray-200"></span>
+                </div>
+                <p class="font-handwritten text-center text-md text-gray-500 editable-text" contenteditable="true">Natural · Calm · Balanced</p>
+            </div>
+
+            <!-- Item 13: Texture Swatch Fabric -->
+            <div class="board-item p-4 w-44 h-56 transform rotate-2 bg-[#e6e2da]" style="left: 1280px; top: 920px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); box-shadow: var(--item-shadow);">
+                <!-- Ring Clip for grommet -->
+                <div class="absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full border-4 border-amber-600 shadow-sm flex items-center justify-center bg-transparent z-10">
+                    <div class="w-3 h-3 rounded-full bg-board" style="background:#cda27b;"></div>
+                </div>
+                <div class="connect-point top" data-id="item13_in" style="top: 10px;"></div>
+                
+                <!-- Fabric patterned canvas block -->
+                <div class="w-full h-24 bg-[#546255] mt-8 rounded opacity-90 shadow-inner" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px);"></div>
+                <p class="font-handwritten text-center text-md mt-4 text-gray-600 editable-text" contenteditable="true">Texture Inspo</p>
+            </div>
+
+            <!-- Item 14: UX Designer ID Badge (Nicole Li) -->
+            <div class="board-item badge-case w-48 h-72 transform -rotate-1" style="left: 1550px; top: 910px;">
+                <div class="clip"></div>
+                <div class="connect-point top" data-id="badge3_out"></div>
+                
+                <div class="badge-inner">
+                    <div class="h-6 w-full bg-[#40545a] flex items-center justify-center">
+                        <span class="text-[8px] tracking-widest text-white/80 font-bold">CREATIVE STUDIO</span>
+                    </div>
+                    <div class="flex-grow flex flex-col items-center justify-center p-4">
+                        <div class="w-16 h-16 rounded-full bg-[#f1f5f1] border border-gray-200 flex items-center justify-center mb-3">
+                            <svg class="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        </div>
+                        <span class="text-[8px] font-bold text-gray-400 tracking-widest editable-text" contenteditable="true">UX DESIGNER</span>
+                        <h4 class="text-md font-bold tracking-wider text-[#40545a] mb-2 editable-text" contenteditable="true">NICOLE LI</h4>
+                        <div class="text-[9px] font-mono text-gray-500 leading-tight">
+                            <p class="editable-text" contenteditable="true">ID: 2310 5567</p>
+                            <p class="editable-text" contenteditable="true">Access Level 2</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 EXPANDED EXTRA BOARD ITEMS (No existing elements removed)
+                 ========================================== -->
+
+            <!-- Item 15: Small leaf card -->
+            <div class="board-item paper-note p-3 w-28 h-36 transform -rotate-2" style="left: 1880px; top: 900px;">
+                <div class="pin metal"></div>
+                <!-- Simple SVG branch -->
+                <svg class="w-full h-20 text-[#6c7c59] mt-2" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2"><path d="M50 90 Q40 50 20 20 M50 70 Q70 60 80 40 M45 50 Q30 40 25 30 M52 35 Q65 25 70 15"></path></svg>
+                <p class="font-handwritten text-[10px] text-center mt-2 editable-text" contenteditable="true">Keep growing.</p>
+            </div>
+
+            <!-- Item 16: Vellum Note (Translucent) -->
+            <div class="board-item p-4 w-48 h-48 transform rotate-2 vellum-note" style="left: 2100px; top: 200px; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.8); border-radius: 4px; box-shadow: var(--item-shadow);">
+                <div class="pin white"></div>
+                <h3 class="font-sans text-xs font-bold tracking-widest text-gray-500 mb-3 editable-text" contenteditable="true">TRANSLUCENT</h3>
+                <p class="font-serif text-lg leading-tight editable-text" contenteditable="true">Seeing through the layers of the design system.</p>
+                <div class="connect-point bottom" data-id="item16_out"></div>
+            </div>
+
+            <!-- Item 17: Dark Mode Code Snippet -->
+            <div class="board-item p-4 w-60 h-auto transform -rotate-1 dark-note" style="left: 2150px; top: 520px; background: #1e1e1e; color: #d4d4d4; border-radius: 6px; box-shadow: var(--item-shadow); border-top: 24px solid #333;">
+                <div class="absolute top-[-18px] left-2 flex gap-1 z-10">
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                </div>
+                <div class="tape angled" style="top: -30px;"></div>
+                <pre class="font-mono text-xs overflow-hidden editable-text" contenteditable="true">
+<span class="text-pink-400">const</span> initBoard = () <span class="text-blue-400">=></span> {
+  <span class="text-blue-300">loadState</span>();
+  <span class="text-blue-300">renderNodes</span>();
+  <span class="text-green-400">// Ready for interact</span>
+};</pre>
+                <div class="connect-point left" data-id="item17_in"></div>
+            </div>
+
+            <!-- Item 18: Kanban Mini Board -->
+            <div class="board-item paper-note p-4 w-72 h-auto transform rotate-1" style="left: 1880px; top: 1300px;">
+                <div class="pin metal left"></div>
+                <div class="pin metal right"></div>
+                <h3 class="font-marker text-xl font-bold mb-3 border-b border-gray-300 pb-1 editable-text" contenteditable="true">Sprint Board</h3>
+                <div class="flex gap-2 text-xs">
+                    <div class="flex-1 bg-gray-100 p-2 rounded">
+                        <div class="font-bold mb-1 text-gray-700 editable-text" contenteditable="true">To Do</div>
+                        <div class="bg-white p-1 mb-1 shadow-sm rounded editable-text" contenteditable="true">Nav Menu</div>
+                        <div class="bg-white p-1 shadow-sm rounded editable-text" contenteditable="true">Footer UI</div>
+                    </div>
+                    <div class="flex-1 bg-blue-50 p-2 rounded">
+                        <div class="font-bold mb-1 text-blue-800 editable-text" contenteditable="true">Doing</div>
+                        <div class="bg-white p-1 shadow-sm rounded border-l-2 border-blue-400 editable-text" contenteditable="true">Animations</div>
+                    </div>
+                    <div class="flex-1 bg-green-50 p-2 rounded">
+                        <div class="font-bold mb-1 text-green-800 editable-text" contenteditable="true">Done</div>
+                        <div class="bg-white p-1 shadow-sm rounded border-l-2 border-green-400 line-through text-gray-400 editable-text" contenteditable="true">Setup</div>
+                    </div>
+                </div>
+                <div class="connect-point top" data-id="item18_in"></div>
+            </div>
+
+            <!-- Item 19: Color Palette -->
+            <div class="board-item paper-note p-0 w-36 h-auto transform -rotate-3 overflow-hidden rounded-md" style="left: 1550px; top: 1350px;">
+                <div class="clip"></div>
+                <div class="h-8 w-full bg-[#f4a261]"></div>
+                <div class="h-8 w-full bg-[#e76f51]"></div>
+                <div class="h-8 w-full bg-[#2a9d8f]"></div>
+                <div class="h-8 w-full bg-[#e9c46a]"></div>
+                <div class="h-8 w-full bg-[#264653]"></div>
+                <div class="p-3 bg-white">
+                    <p class="font-handwritten text-center text-sm font-bold editable-text" contenteditable="true">Autumn Palette</p>
+                </div>
+                <div class="connect-point left" data-id="item19_in"></div>
+            </div>
+
+            <!-- Item 20: Circular Mind Node -->
+            <div class="board-item w-32 h-32 transform rotate-2 rounded-full flex items-center justify-center text-center p-4" style="left: 1200px; top: 1350px; background: radial-gradient(circle at 30% 30%, #fff, #f0e6d2); border: 2px solid #d4b53b; box-shadow: var(--item-shadow);">
+                <p class="font-marker text-lg editable-text" contenteditable="true">Core<br>Concept</p>
+                <div class="connect-point top" data-id="item20_in"></div>
+                <div class="connect-point right" data-id="item20_out1"></div>
+                <div class="connect-point left" data-id="item20_out2"></div>
+            </div>
+
+            <!-- Item 21: Chart Sketch -->
+            <div class="board-item bg-[#fdfbf7] p-4 w-56 h-48 transform rotate-1" style="left: 800px; top: 1350px; background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px); background-size: 100% 20px;">
+                <div class="tape"></div>
+                <h3 class="font-handwritten text-md mb-2 editable-text" contenteditable="true">Growth Projection</h3>
+                <svg class="w-full h-24 overflow-visible" viewBox="0 0 100 50">
+                    <polyline fill="none" stroke="#2a9d8f" stroke-width="2" points="0,50 20,40 40,45 60,20 80,25 100,5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="100" cy="5" r="3" fill="#e76f51"/>
+                </svg>
+                <p class="font-handwritten text-xs mt-2 text-right text-gray-500 editable-text" contenteditable="true">Target: Q4</p>
+                <div class="connect-point top" data-id="item21_in"></div>
+            </div>
+
+            <!-- Item 22: Calendar Note -->
+            <div class="board-item paper-note p-3 w-48 h-auto transform -rotate-2" style="left: 450px; top: 1350px;">
+                <div class="pin red"></div>
+                <div class="bg-red-500 text-white text-center font-bold text-xs py-1 rounded-t-sm uppercase tracking-widest editable-text" contenteditable="true">OCTOBER</div>
+                <div class="bg-white border border-gray-200 border-t-0 p-2 rounded-b-sm">
+                    <div class="grid grid-cols-7 gap-1 text-center text-[8px] font-bold text-gray-400 mb-1">
+                        <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+                    </div>
+                    <div class="grid grid-cols-7 gap-1 text-center text-[10px] editable-text" contenteditable="true">
+                        <div class="text-gray-300">28</div><div class="text-gray-300">29</div><div class="text-gray-300">30</div><div>1</div><div>2</div><div>3</div><div>4</div>
+                        <div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div><div>11</div>
+                        <div>12</div><div>13</div><div>14</div><div class="bg-red-100 text-red-600 font-bold rounded-full w-4 h-4 mx-auto flex items-center justify-center">15</div><div>16</div><div>17</div><div>18</div>
+                    </div>
+                    <p class="font-handwritten text-xs mt-2 text-center text-red-600 editable-text" contenteditable="true">Deadline!</p>
+                </div>
+                <div class="connect-point right" data-id="item22_out"></div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Bottom Bar Controls (Updated to be centered and functional) -->
+    <div class="fixed bottom-6 left-0 right-0 flex justify-center items-center z-50 pointer-events-none">
+        
+        <div class="glass-panel flex rounded-full shadow-lg overflow-hidden pointer-events-auto items-center p-1 px-2 space-x-2">
+            <!-- Focus Mode (Left) -> Now Centers View -->
+            <button class="px-3 py-2 rounded-full flex items-center space-x-2 hover:bg-white/50 transition cursor-pointer" onclick="centerView()" title="Center all items">
+                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                <span class="text-xs font-semibold text-gray-700 hidden sm:inline">Center View</span>
+            </button>
+
+            <div class="w-px h-6 bg-gray-300"></div> <!-- Separator -->
+
+            <!-- Center: Helper Text -->
+            <div class="px-4 py-1 hidden md:block">
+                <span class="text-xs font-medium text-gray-600">Drag items to move, connect points to draw lines. Text is fully editable.</span>
+            </div>
+            
+            <div class="w-px h-6 bg-gray-300 hidden md:block"></div> <!-- Separator -->
+
+            <!-- Actions (Right) -->
+            <button class="px-3 py-2 rounded-full hover:bg-white/50 transition cursor-pointer" onclick="resetView()" title="Reset Zoom">
+                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </button>
+            <button class="px-4 py-2 rounded-full flex items-center space-x-1 bg-white/60 hover:bg-white border border-gray-200 transition cursor-pointer shadow-sm" onclick="addNewNoteMenu(event)">
+                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span class="text-xs font-semibold text-gray-800">Add Note</span>
+            </button>
+            <button class="px-3 py-2 rounded-full flex items-center space-x-1 hover:bg-white/50 transition cursor-pointer" onclick="showShareModal()">
+                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                <span class="text-xs font-semibold text-gray-700 hidden sm:inline">Share</span>
+            </button>
+        </div>
+        
+        <!-- Add Note Dropdown Menu (Expanded) -->
+        <div id="add-note-menu" class="absolute bottom-16 right-auto bg-white rounded-xl shadow-2xl border border-gray-200 p-3 w-80 hidden pointer-events-auto transform translate-x-10 z-[100]">
+            <h4 class="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wider pl-1">Basic Notes</h4>
+            <div class="grid grid-cols-2 gap-1 mb-3">
+                <button class="text-left px-2 py-2 text-xs hover:bg-gray-50 rounded flex items-center font-medium transition-colors" onclick="addNewNote('paper-note', 'white')"><span class="w-3 h-3 rounded-sm bg-[#fdfbf7] border border-gray-200 mr-2 shadow-sm"></span> White Note</button>
+                <button class="text-left px-2 py-2 text-xs hover:bg-gray-50 rounded flex items-center font-medium transition-colors" onclick="addNewNote('paper-yellow', 'wood')"><span class="w-3 h-3 rounded-sm bg-[#fdf0a6] border border-gray-200 mr-2 shadow-sm"></span> Yellow Post-it</button>
+                <button class="text-left px-2 py-2 text-xs hover:bg-gray-50 rounded flex items-center font-medium transition-colors" onclick="addNewNote('paper-green', 'metal')"><span class="w-3 h-3 rounded-sm bg-[#d1e2c4] border border-gray-200 mr-2 shadow-sm"></span> Green Note</button>
+                <button class="text-left px-2 py-2 text-xs hover:bg-gray-50 rounded flex items-center font-medium transition-colors" onclick="addNewNote('paper-blue', 'red')"><span class="w-3 h-3 rounded-sm bg-[#aecdde] border border-gray-200 mr-2 shadow-sm"></span> Blue Note</button>
+            </div>
+            <h4 class="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wider border-t border-gray-100 pt-3 pl-1">Special Items</h4>
+            <div class="grid grid-cols-2 gap-1">
+                <button class="text-left px-2 py-2 text-xs hover:bg-gray-50 rounded flex items-center transition-colors" onclick="addNewNote('torn-paper')"><span class="mr-2 opacity-70">📄</span> Torn Paper</button>
+                <button class="text-left px-2 py-2 text-xs hover:bg-gray-50 rounded flex items-center transition-colors" onclick="addNewNote('polaroid')"><span class="mr-2 opacity-70">🖼️</span> Polaroid</button>
+                <button class="text-left px-2 py-2 text-xs hover:bg-gray-50 rounded flex items-center transition-colors" onclick="addNewNote('id-badge')"><span class="mr-2 opacity-70">🪪</span> ID Badge</button>
+                <button class="text-left px-2 py-2 text-xs hover:bg-gray-50 rounded flex items-center transition-colors" onclick="addNewNote('spiral-pad')"><span class="mr-2 opacity-70">📓</span> Spiral Pad</button>
+                <button class="text-left px-2 py-2 text-xs hover:bg-gray-50 rounded flex items-center transition-colors" onclick="addNewNote('grid-sketch')"><span class="mr-2 opacity-70">📐</span> Grid Sketch</button>
+                <button class="text-left px-2 py-2 text-xs hover:bg-gray-50 rounded flex items-center transition-colors" onclick="addNewNote('fabric')"><span class="mr-2 opacity-70">🧵</span> Fabric Swatch</button>
+                <button class="text-left px-2 py-2 text-xs hover:bg-gray-50 rounded flex items-center transition-colors" onclick="addNewNote('kanban')"><span class="mr-2 opacity-70">📋</span> Kanban Board</button>
+                <button class="text-left px-2 py-2 text-xs hover:bg-gray-50 rounded flex items-center transition-colors" onclick="addNewNote('code-snippet')"><span class="mr-2 opacity-70">💻</span> Code Snippet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Modal Overlay -->
+    <div id="share-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-[200] opacity-0 transition-opacity duration-200">
+        <div id="share-modal-content" class="bg-[#fdfbf7] p-8 rounded-2xl shadow-2xl w-[400px] transform scale-95 transition-transform duration-200 border border-gray-200">
+            <h3 class="font-serif text-xl mb-2 text-gray-800">Share your Workboard</h3>
+            <p class="text-sm text-gray-500 mb-6 font-sans">Anyone with this link can view and collaborate.</p>
+            
+            <div class="flex gap-2 mb-6">
+                <input type="text" id="share-url" value="https://corkboard.app/b/x9q2p8v" class="flex-1 p-3 text-sm border border-gray-300 rounded-lg bg-gray-50 font-mono text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#6c7c59]/50" readonly>
+                <button onclick="copyShareLink()" id="copy-btn" class="px-5 py-3 bg-[#6c7c59] text-white text-sm font-semibold rounded-lg hover:bg-[#5a6849] transition-colors shadow-sm whitespace-nowrap">Copy Link</button>
+            </div>
+            
+            <div class="flex items-center gap-3 mb-6 p-3 bg-blue-50/50 rounded-lg border border-blue-100">
+                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="text-xs text-blue-800 font-medium">Collaborative editing is currently active.</span>
+            </div>
+            
+            <button onclick="closeShareModal()" class="w-full py-3 text-sm font-bold text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">Done</button>
+        </div>
+    </div>
+
+    <script>
+        // Store Board State globally with absolute safety
+        window.appState = {
+            scale: 1,
+            panX: 0,
+            panY: 0,
+            isDraggingWorkspace: false,
+            startX: 0,
+            startY: 0,
+            connections: [
+                { from: 'item1_out', to: 'badge2_in', class: 'thread' },
+                { from: 'item3_out', to: 'item4_in', class: 'thread' },
+                { from: 'badge1_out', to: 'item7_in', class: 'thread' },
+                { from: 'badge1_out', to: 'item8_in', class: 'thread' },
+                { from: 'badge2_out', to: 'item8_in', class: 'thread' },
+                { from: 'item8_out', to: 'item9_in', class: 'thread-yellow' },
+                { from: 'item10_out', to: 'item11_in', class: 'thread-yellow' },
+                { from: 'item8_in', to: 'item13_in', class: 'thread' },
+                { from: 'item8_out', to: 'badge3_in', class: 'thread-yellow' },
+                { from: 'item9_in', to: 'item16_out', class: 'thread-yellow' },
+                { from: 'badge3_in', to: 'item17_in', class: 'thread' },
+                { from: 'item18_in', to: 'item17_in', class: 'thread' },
+                { from: 'item19_in', to: 'item13_in', class: 'thread-yellow' },
+                { from: 'item20_in', to: 'item11_in', class: 'thread-yellow' },
+                { from: 'item20_out1', to: 'item21_in', class: 'thread-yellow' },
+                { from: 'item22_out', to: 'item20_out2', class: 'thread' }
+            ]
+        };
+
+        // Unique ID Generator
+        window.generateId = function() {
+            return 'item_' + Math.random().toString(36).substr(2, 9);
+        };
+
+        // Update CSS Transforms for Board Workspace
+        window.updateWorkspaceTransform = function() {
+            const workspace = document.getElementById('workspace');
+            if (workspace) {
+                workspace.style.transform = `translate(${window.appState.panX}px, ${window.appState.panY}px) scale(${window.appState.scale})`;
+            }
+        };
+
+        // Render all thread links and lines beautifully on the SVG Layer
+        window.drawAllConnections = function() {
+            const svg = document.getElementById('connections-layer');
+            if (!svg) return;
+            svg.innerHTML = '';
+            
+            const workspace = document.getElementById('workspace');
+            if (!workspace) return;
+            
+            const workspaceRect = workspace.getBoundingClientRect();
+
+            window.appState.connections.forEach(conn => {
+                const el1 = document.querySelector(`[data-id="${conn.from}"]`);
+                const el2 = document.querySelector(`[data-id="${conn.to}"]`);
+                
+                if (el1 && el2) {
+                    const rect1 = el1.getBoundingClientRect();
+                    const rect2 = el2.getBoundingClientRect();
+                    
+                    // Convert screen positions back into unscaled/unpanned workspace positions
+                    const x1 = (rect1.left + rect1.width/2 - workspaceRect.left) / window.appState.scale;
+                    const y1 = (rect1.top + rect1.height/2 - workspaceRect.top) / window.appState.scale;
+                    const x2 = (rect2.left + rect2.width/2 - workspaceRect.left) / window.appState.scale;
+                    const y2 = (rect2.top + rect2.height/2 - workspaceRect.top) / window.appState.scale;
+
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    
+                    // Bezier points calculating for weighted realistic cord sag
+                    const dx = Math.abs(x2 - x1) * 0.5;
+                    const dy = Math.abs(y2 - y1) * 0.5;
+                    const d = `M ${x1} ${y1} C ${x1 + dx} ${y1 + dy}, ${x2 - dx} ${y2 - dy}, ${x2} ${y2}`;
+                    
+                    path.setAttribute('d', d);
+                    path.setAttribute('fill', 'none');
+                    path.setAttribute('stroke-width', '2');
+                    
+                    if (conn.class === 'thread-yellow') {
+                        path.setAttribute('stroke', '#d4b53b');
+                    } else {
+                        path.setAttribute('stroke', '#4a5d4e');
+                    }
+                    
+                    svg.appendChild(path);
+                }
+            });
+        };
+
+        // Bind dynamic board dragging & styling events
+        window.bindItemEvents = function() {
+            const items = document.querySelectorAll('.board-item');
+            items.forEach(item => {
+                if(item.dataset.bound === 'true') return;
+                item.dataset.bound = 'true';
+
+                // Editable Fields Highlight Logic
+                item.addEventListener('focusin', (e) => {
+                    if (e.target.classList.contains('editable-text')) {
+                        item.classList.add('editing-mode');
+                    }
+                });
+                
+                item.addEventListener('focusout', (e) => {
+                    if (e.target.classList.contains('editable-text')) {
+                        item.classList.remove('editing-mode');
+                    }
+                });
+
+                // Drag and Drop implementation
+                let isDragging = false;
+                let startX, startY, initialLeft, initialTop;
+
+                item.addEventListener('mousedown', (e) => {
+                    // Do not drag if focusing/selecting an interactive element or text box
+                    if (e.target.classList.contains('connect-point') || 
+                        e.target.tagName === 'INPUT' || 
+                        e.target.tagName === 'LABEL' ||
+                        e.target.classList.contains('editable-text')) {
+                        return; 
+                    }
+                    
+                    e.stopPropagation();
+                    isDragging = true;
+                    
+                    // Bring clicked item to absolute top stack
+                    let maxZ = 0;
+                    document.querySelectorAll('.board-item').forEach(el => {
+                        let z = parseInt(window.getComputedStyle(el).zIndex) || 0;
+                        if (z > maxZ) maxZ = z;
+                    });
+                    item.style.zIndex = maxZ + 1;
+                    
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    initialLeft = parseFloat(item.style.left) || 0;
+                    initialTop = parseFloat(item.style.top) || 0;
+                    
+                    item.style.cursor = 'grabbing';
+                    item.classList.add('shadow-2xl');
+                });
+
+                window.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    const dx = (e.clientX - startX) / window.appState.scale;
+                    const dy = (e.clientY - startY) / window.appState.scale;
+                    
+                    item.style.left = `${initialLeft + dx}px`;
+                    item.style.top = `${initialTop + dy}px`;
+                    
+                    // Refresh connection lines on-the-fly
+                    window.drawAllConnections();
+                });
+
+                window.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        item.style.cursor = 'grab';
+                        item.classList.remove('shadow-2xl');
+                    }
+                });
+            });
+        };
+
+        // Interaction lines logic for connections
+        window.activeConnectionStart = null;
+        window.activeLine = null;
+
+        window.bindConnectionPoints = function() {
+            const points = document.querySelectorAll('.connect-point');
+            points.forEach(point => {
+                if(point.dataset.bound === 'true') return;
+                point.dataset.bound = 'true';
+
+                point.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    window.activeConnectionStart = point;
+                    
+                    // Setup virtual dashed tracer wire
+                    window.activeLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    window.activeLine.setAttribute('fill', 'none');
+                    window.activeLine.setAttribute('stroke', '#4a5d4e');
+                    window.activeLine.setAttribute('stroke-width', '2');
+                    window.activeLine.setAttribute('stroke-dasharray', '4');
+                    
+                    const connectionsLayer = document.getElementById('connections-layer');
+                    if (connectionsLayer) {
+                        connectionsLayer.appendChild(window.activeLine);
+                    }
+                });
+
+                point.addEventListener('mouseup', (e) => {
+                    e.stopPropagation();
+                    if (window.activeConnectionStart && window.activeConnectionStart !== point) {
+                        // Confirm connection
+                        window.appState.connections.push({
+                            from: window.activeConnectionStart.dataset.id,
+                            to: point.dataset.id,
+                            class: 'thread'
+                        });
+                        window.drawAllConnections();
+                    }
+                    if (window.activeLine) {
+                        window.activeLine.remove();
+                        window.activeLine = null;
+                    }
+                    window.activeConnectionStart = null;
+                });
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (window.activeConnectionStart && window.activeLine) {
+                    const workspace = document.getElementById('workspace');
+                    if(!workspace) return;
+                    
+                    const rect1 = window.activeConnectionStart.getBoundingClientRect();
+                    const workspaceRect = workspace.getBoundingClientRect();
+                    
+                    const x1 = (rect1.left + rect1.width/2 - workspaceRect.left) / window.appState.scale;
+                    const y1 = (rect1.top + rect1.height/2 - workspaceRect.top) / window.appState.scale;
+                    const x2 = (e.clientX - workspaceRect.left) / window.appState.scale;
+                    const y2 = (e.clientY - workspaceRect.top) / window.appState.scale;
+                    
+                    const dx = Math.abs(x2 - x1) * 0.5;
+                    const dy = Math.abs(y2 - y1) * 0.5;
+                    const d = `M ${x1} ${y1} C ${x1 + dx} ${y1 + dy}, ${x2 - dx} ${y2 - dy}, ${x2} ${y2}`;
+                    window.activeLine.setAttribute('d', d);
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (window.activeLine) {
+                    window.activeLine.remove();
+                    window.activeLine = null;
+                }
+                window.activeConnectionStart = null;
+            });
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            window.updateWorkspaceTransform();
+            window.bindItemEvents();
+            window.bindConnectionPoints();
+            
+            // Wait shortly for layout render, then initial paint
+            setTimeout(window.drawAllConnections, 100);
+
+            // Workspace background panning
+            const container = document.getElementById('board-container');
+            
+            // Critical Safety Checks to fix the line 1080 null issue
+            if (container) {
+                container.addEventListener('mousedown', (e) => {
+                    if(e.target === container || e.target.id === 'workspace' || e.target.id === 'connections-layer') {
+                        window.appState.isDraggingWorkspace = true;
+                        window.appState.startX = e.clientX - window.appState.panX;
+                        window.appState.startY = e.clientY - window.appState.panY;
+                        container.style.cursor = 'grabbing';
+                    }
+                });
+
+                // Smooth high density scroll wheel zoom
+                container.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    const zoomSensitivity = 0.001;
+                    const delta = -e.deltaY * zoomSensitivity;
+                    
+                    let newScale = window.appState.scale + delta;
+                    newScale = Math.min(Math.max(0.3, newScale), 3);
+                    
+                    const rect = container.getBoundingClientRect();
+                    const mouseX = e.clientX - rect.left;
+                    const mouseY = e.clientY - rect.top;
+
+                    // Adjust pan position to keep mouse point focused during zoom
+                    window.appState.panX = mouseX - (mouseX - window.appState.panX) * (newScale / window.appState.scale);
+                    window.appState.panY = mouseY - (mouseY - window.appState.panY) * (newScale / window.appState.scale);
+                    window.appState.scale = newScale;
+
+                    window.updateWorkspaceTransform();
+                    window.drawAllConnections();
+                }, { passive: false });
+            }
+
+            window.addEventListener('mousemove', (e) => {
+                if(window.appState.isDraggingWorkspace) {
+                    window.appState.panX = e.clientX - window.appState.startX;
+                    window.appState.panY = e.clientY - window.appState.startY;
+                    window.updateWorkspaceTransform();
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (window.appState.isDraggingWorkspace) {
+                    window.appState.isDraggingWorkspace = false;
+                    if (container) container.style.cursor = 'default';
+                }
+            });
+            
+            // Make responsive window resize safe
+            window.addEventListener('resize', window.drawAllConnections);
+            
+            // Close dropdowns on outside clicks
+            document.addEventListener('mousedown', (e) => {
+                const menu = document.getElementById('add-note-menu');
+                const btn = e.target.closest('button[onclick="addNewNoteMenu(event)"]');
+                if (menu && !menu.classList.contains('hidden') && !menu.contains(e.target) && !btn) {
+                    menu.classList.add('hidden');
+                }
+            });
+
+            // Run initial center view focus
+            setTimeout(window.centerView, 200);
+        });
+
+        // Recalculates bounding box of all items and centers view elegantly
+        window.centerView = function() {
+            const items = document.querySelectorAll('.board-item');
+            if(items.length === 0) return;
+            
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            items.forEach(item => {
+                const left = parseFloat(item.style.left) || 0;
+                const top = parseFloat(item.style.top) || 0;
+                const width = item.offsetWidth;
+                const height = item.offsetHeight;
+                if(left < minX) minX = left;
+                if(top < minY) minY = top;
+                if(left + width > maxX) maxX = left + width;
+                if(top + height > maxY) maxY = top + height;
+            });
+
+            // Add margin borders for optimal fit
+            const padding = 150;
+            const boardWidth = maxX - minX + padding * 2;
+            const boardHeight = maxY - minY + padding * 2;
+            
+            const scaleX = window.innerWidth / boardWidth;
+            const scaleY = window.innerHeight / boardHeight;
+            let newScale = Math.min(scaleX, scaleY, 1.1); // limit close-up zoom slightly
+            
+            // If workspace is smaller than container, keep zoom normal
+            if (boardWidth < window.innerWidth && boardHeight < window.innerHeight) {
+                newScale = 1;
+            }
+
+            const centerX = minX + (maxX - minX) / 2;
+            const centerY = minY + (maxY - minY) / 2;
+
+            const panX = (window.innerWidth / 2) - (centerX * newScale);
+            const panY = (window.innerHeight / 2) - (centerY * newScale);
+
+            window.appState.scale = newScale;
+            window.appState.panX = panX;
+            window.appState.panY = panY;
+            window.updateWorkspaceTransform();
+            
+            // Rerender lines
+            setTimeout(window.drawAllConnections, 50);
+        };
+
+        window.resetView = function() {
+            window.appState.scale = 1;
+            window.appState.panX = 0;
+            window.appState.panY = 0;
+            window.updateWorkspaceTransform();
+            setTimeout(window.drawAllConnections, 100);
+        };
+
+        window.showShareModal = function() {
+            const modal = document.getElementById('share-modal');
+            const content = document.getElementById('share-modal-content');
+            if(modal && content) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    content.classList.remove('scale-95');
+                    content.classList.add('scale-100');
+                }, 10);
+            }
+        };
+
+        window.closeShareModal = function() {
+            const modal = document.getElementById('share-modal');
+            const content = document.getElementById('share-modal-content');
+            
+            if(modal && content) {
+                modal.classList.add('opacity-0');
+                content.classList.remove('scale-100');
+                content.classList.add('scale-95');
+                
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    // reset copy button state
+                    const copyBtn = document.getElementById('copy-btn');
+                    if (copyBtn) {
+                        copyBtn.innerText = 'Copy Link';
+                        copyBtn.classList.replace('bg-gray-800', 'bg-[#6c7c59]');
+                    }
+                }, 200);
+            }
+        };
+
+        window.copyShareLink = function() {
+            const copyText = document.getElementById('share-url');
+            if (copyText) {
+                copyText.select();
+                copyText.setSelectionRange(0, 99999);
+                try {
+                    document.execCommand('copy');
+                    const btn = document.getElementById('copy-btn');
+                    if (btn) {
+                        btn.innerText = 'Copied!';
+                        btn.classList.replace('bg-[#6c7c59]', 'bg-gray-800');
+                    }
+                } catch (err) {
+                    console.error('Failed to copy', err);
+                }
+            }
+        };
+
+        window.addNewNoteMenu = function(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('add-note-menu');
+            if (menu) {
+                menu.classList.toggle('hidden');
+            }
+        };
+
+        // Main spawning method representing ALL rich style palettes
+        window.addNewNote = function(type, pinType = 'red') {
+            const workspace = document.getElementById('workspace');
+            if(!workspace) return;
+            
+            const newId = window.generateId();
+            const outId = newId + '_out';
+            const inId = newId + '_in';
+            
+            // Calculate coordinates centered on user's current view
+            const containerCenterW = window.innerWidth / 2;
+            const containerCenterH = window.innerHeight / 2;
+            
+            const dropX = (containerCenterW - window.appState.panX) / window.appState.scale;
+            const dropY = (containerCenterH - window.appState.panY) / window.appState.scale;
+            
+            // Random slight aesthetic rotation (-3 to +3 deg)
+            const rotation = Math.floor(Math.random()*6 - 3);
+            
+            let noteHTML = '';
+            const baseStyle = `left: ${dropX - 100}px; top: ${dropY - 100}px; z-index: 100;`;
+            
+            switch (type) {
+                case 'polaroid':
+                    noteHTML = `
+                        <div class="board-item polaroid w-44 transform rotate-${rotation}" style="${baseStyle}">
+                            <div class="pin white"></div>
+                            <img src="https://images.unsplash.com/photo-[random]?auto=format&fit=crop&w=300&q=80" onerror="this.src='https://placehold.co/300x250/e0e0e0/666?text=Photo'" alt="New Image" class="polaroid-img">
+                            <p class="font-handwritten text-center mt-3 text-sm editable-text" contenteditable="true">Caption here...</p>
+                            <div class="connect-point top" data-id="${inId}"></div>
+                            <div class="connect-point bottom" data-id="${outId}"></div>
+                        </div>
+                    `;
+                    break;
+                case 'torn-paper':
+                    noteHTML = `
+                        <div class="board-item paper-note ripped-edge-left p-6 w-56 h-auto transform rotate-${rotation}" style="${baseStyle}">
+                            <div class="pin metal"></div>
+                            <h3 class="font-marker text-xl font-bold mb-4 text-center editable-text" contenteditable="true">NEW LIST</h3>
+                            <div class="space-y-3 font-handwritten text-sm editable-text" contenteditable="true">
+                                <div class="flex items-center space-x-2"><input type="checkbox" class="accent-gray-700"> <span>Item 1</span></div>
+                                <div class="flex items-center space-x-2"><input type="checkbox" class="accent-gray-700"> <span>Item 2</span></div>
+                            </div>
+                            <div class="connect-point right" data-id="${outId}"></div>
+                        </div>
+                    `;
+                    break;
+                case 'id-badge':
+                    noteHTML = `
+                        <div class="board-item badge-case w-40 h-56 transform rotate-${rotation}" style="${baseStyle}">
+                            <div class="clip"></div>
+                            <div class="badge-inner">
+                                <div class="badge-lanyard-hole"></div>
+                                <div class="h-6 w-full"></div>
+                                <div class="flex-grow flex flex-col items-center justify-center p-3">
+                                    <div class="w-12 h-12 rounded-full bg-gray-400 mb-2 shadow-sm"></div>
+                                    <div class="text-[8px] font-bold tracking-widest text-gray-500 mb-1 editable-text" contenteditable="true">ROLE</div>
+                                    <div class="text-xs font-bold text-gray-800 tracking-wider mb-2 editable-text" contenteditable="true">NAME</div>
+                                </div>
+                                <div class="h-5 w-full bg-gray-800 text-[7px] text-white flex items-center justify-center font-bold tracking-widest editable-text" contenteditable="true">DEPARTMENT</div>
+                            </div>
+                            <div class="connect-point top" data-id="${inId}"></div>
+                        </div>
+                    `;
+                    break;
+                case 'spiral-pad':
+                    noteHTML = `
+                        <div class="board-item paper-note p-6 w-56 h-48 transform rotate-${rotation}" style="${baseStyle}">
+                            <!-- Spiral bindings design -->
+                            <div class="absolute top-0 bottom-0 left-0 w-6 border-r border-gray-200 bg-[#fdfbf7]">
+                                <div class="absolute top-4 left-2 w-3 h-3 rounded-full bg-[#333] shadow-inner"></div>
+                                <div class="absolute top-12 left-2 w-3 h-3 rounded-full bg-[#333] shadow-inner"></div>
+                                <div class="absolute top-20 left-2 w-3 h-3 rounded-full bg-[#333] shadow-inner"></div>
+                                <div class="absolute top-28 left-2 w-3 h-3 rounded-full bg-[#333] shadow-inner"></div>
+                            </div>
+                            <div class="pin wood" style="left: 50%;"></div>
+                            <div class="ml-4 h-full flex flex-col">
+                                <h3 class="font-serif text-sm border-b border-gray-300 pb-1 editable-text" contenteditable="true">Notes</h3>
+                                <p class="font-handwritten mt-2 text-sm editable-text flex-grow" contenteditable="true">Start writing here...</p>
+                            </div>
+                            <div class="connect-point right" data-id="${outId}"></div>
+                        </div>
+                    `;
+                    break;
+                case 'grid-sketch':
+                    noteHTML = `
+                        <div class="board-item bg-[#f5efe6] p-4 w-56 h-48 transform rotate-${rotation}" style="${baseStyle} background-image: linear-gradient(#e0dcd3 1px, transparent 1px), linear-gradient(90deg, #e0dcd3 1px, transparent 1px); background-size: 15px 15px;">
+                            <div class="tape angled"></div>
+                            <h3 class="font-handwritten text-md mb-2 bg-white/50 inline-block px-1 editable-text" contenteditable="true">Sketch</h3>
+                            <div class="w-full h-24 bg-white/40 border border-gray-400 mt-2"></div>
+                            <div class="connect-point bottom" data-id="${outId}"></div>
+                        </div>
+                    `;
+                    break;
+                case 'fabric':
+                    noteHTML = `
+                        <div class="board-item bg-[#e8e4db] p-3 w-36 h-48 transform rotate-${rotation}" style="${baseStyle} box-shadow: var(--item-shadow), inset 0 0 20px rgba(0,0,0,0.05);">
+                            <div class="absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full border-4 border-[#b89947] shadow-sm z-10"></div>
+                            <div class="w-full h-24 bg-[#8fa4b5] mt-8 opacity-90 shadow-inner" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px);"></div>
+                            <p class="font-handwritten text-center text-xs mt-4 editable-text" contenteditable="true">Material</p>
+                            <div class="connect-point left" data-id="${inId}"></div>
+                        </div>
+                    `;
+                    break;
+                case 'kanban':
+                    noteHTML = `
+                        <div class="board-item paper-note p-4 w-64 h-auto transform rotate-${rotation}" style="${baseStyle}">
+                            <div class="pin metal left"></div><div class="pin metal right"></div>
+                            <h3 class="font-marker text-lg font-bold mb-2 border-b border-gray-300 pb-1 editable-text" contenteditable="true">Mini Board</h3>
+                            <div class="flex gap-2 text-xs">
+                                <div class="flex-1 bg-gray-100 p-1 rounded min-h-[60px] editable-text" contenteditable="true"><b>To Do</b><br><br></div>
+                                <div class="flex-1 bg-gray-100 p-1 rounded min-h-[60px] editable-text" contenteditable="true"><b>Done</b><br><br></div>
+                            </div>
+                            <div class="connect-point top" data-id="${inId}"></div>
+                        </div>
+                    `;
+                    break;
+                case 'code-snippet':
+                    noteHTML = `
+                        <div class="board-item p-4 w-60 h-auto transform rotate-${rotation} dark-note" style="${baseStyle} background: #1e1e1e; color: #d4d4d4; border-radius: 6px; box-shadow: var(--item-shadow); border-top: 24px solid #333;">
+                            <div class="absolute top-[-18px] left-2 flex gap-1 z-10">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            </div>
+                            <div class="tape" style="top: -30px;"></div>
+                            <pre class="font-mono text-xs overflow-hidden editable-text" contenteditable="true">// Add code here...</pre>
+                            <div class="connect-point left" data-id="${inId}"></div>
+                        </div>
+                    `;
+                    break;
+                default:
+                    noteHTML = `
+                        <div class="board-item ${type} p-4 w-40 min-h-[160px] transform rotate-${rotation}" style="${baseStyle}">
+                            <div class="pin ${pinType}"></div>
+                            <h3 class="font-marker text-lg mt-2 editable-text" contenteditable="true">New Note</h3>
+                            <div class="font-handwritten text-sm mt-2 text-gray-700 editable-text flex-grow" contenteditable="true">
+                                Type your ideas here...
+                            </div>
+                            <div class="connect-point right" data-id="${outId}"></div>
+                            <div class="connect-point left" data-id="${inId}"></div>
+                        </div>
+                    `;
+            }
+            
+            workspace.insertAdjacentHTML('beforeend', noteHTML);
+            
+            // Hide menu after selection
+            const menu = document.getElementById('add-note-menu');
+            if (menu) menu.classList.add('hidden');
+            
+            // Bind listeners for new item immediately
+            window.bindItemEvents();
+            window.bindConnectionPoints();
+            window.drawAllConnections();
+        };
+    </script>
+</body>
+</html>

@@ -59,6 +59,7 @@ project-name/
 | 08 | Visual Notes Magnifier | 放大渐变、悬浮面板、光影映射 |
 | 09 | Craft Family Design System | 玻璃拟态、氛围光、Dock 导航 |
 | 10 | Code-G Artifact | 滚动转场、面孔入口、3D 视差 |
+| 11 | Interactive Corkboard | 软木板、便签拖拽、图钉连线 |
 
 ## 本地预览
 

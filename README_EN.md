@@ -59,6 +59,7 @@ project-name/
 | 08 | Visual Notes Magnifier | Magnifier gradient, floating panels, light mapping |
 | 09 | Craft Family Design System | Glassmorphism, ambient light, Dock navigation |
 | 10 | Code-G Artifact | Scroll transition, face portal, 3D parallax |
+| 11 | Interactive Corkboard | Corkboard, draggable notes, pin-and-string |
 
 ## Local preview
 

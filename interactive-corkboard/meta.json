@@ -1,0 +1,27 @@
+{
+  "id": "interactive-corkboard",
+  "title": "Interactive Corkboard",
+  "note": "EC inspiration asset",
+  "src": "interactive-corkboard/preview.html",
+  "meta": "interactive-corkboard/meta.json",
+  "prompt": "Create a responsive single-file HTML/CSS/JS interactive corkboard. The board is a large pannable/zoomable cork-textured surface with a dark wood frame. Place multiple draggable items: paper sticky notes in yellow/green/blue/cream, ripped-edge notebook strips, Polaroid-style photos with captions, ID badges with lanyard clips, and pinned cards. Each item can be dragged around, rotated slightly, and connected to others with animated SVG strings. Include realistic pushpins (red, white, wood, metal) and translucent washi tape. Add a floating glass toolbar at the bottom for adding new notes, toggling connection mode, and resetting the view. Use Inter, Caveat and Architects Daughter fonts via Google Fonts. Preserve the tactile, analog feel: paper shadows, pin highlights, tape opacity, and cork dot texture. All interactions are pure CSS/JS with no external dependencies beyond Tailwind CDN and Google Fonts.",
+  "css": {
+    "--primary": "#d1a17b",
+    "--background": "#2b1d14",
+    "--surface": "#cda27b",
+    "--text": "#ffffff",
+    "--muted": "rgba(255, 255, 255, 0.6)",
+    "--accent": "#fcf0a3",
+    "--radius-none": "0px",
+    "--radius-sm": "2px",
+    "--radius-md": "6px",
+    "--radius-lg": "12px",
+    "--blur": "blur(12px)",
+    "--shadow": "0 10px 20px -5px rgba(0,0,0,0.18), 0 6px 8px -6px rgba(0,0,0,0.18)",
+    "--grain": "radial-gradient(circle, rgba(0,0,0,0.1) 1.2px, transparent 1.2px), radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)",
+    "--font-sans": "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+    "--font-serif": "Georgia, \"Times New Roman\", Times, serif",
+    "--font-mono": "\"Fira Code\", Consolas, \"Liberation Mono\", Menlo, monospace",
+    "--font-cn": "\"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans SC\", system-ui, sans-serif"
+  }
+}
